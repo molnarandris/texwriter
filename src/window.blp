@@ -34,9 +34,10 @@ template TexwriterWindow: Adw.ApplicationWindow{
       margin-start: 6;
       margin-end: 6;
 
-      GtkSource.View{
+      GtkSource.View text_view {
         monospace: true;
         highlight-current-line: true;
+        wrap-mode: word;
       }
     };
   }
