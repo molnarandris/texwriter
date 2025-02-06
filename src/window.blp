@@ -19,9 +19,17 @@ template TexwriterWindow: Adw.ApplicationWindow{
       }
     }
 
-    content: Gtk.Label label {
-      styles ["title-1"]
-      label: _("Hello, World!");
+    content: Gtk.ScrolledWindow {
+      hexpand: true;
+      vexpand: true;
+      margin-top: 6;
+      margin-bottom: 6;
+      margin-start: 6;
+      margin-end: 6;
+
+      Gtk.TextView{
+        monospace: true;
+      }
     };
   }
 }
