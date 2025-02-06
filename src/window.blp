@@ -11,6 +11,12 @@ template TexwriterWindow: Adw.ApplicationWindow{
   Adw.ToolbarView{
     [top]
     Adw.HeaderBar{
+      [start]
+      Gtk.Button open_button {
+        sensitive: true;
+        label: _("Open");
+        action-name: "win.open";
+      }
       [end]
       Gtk.MenuButton{
         primary: true;

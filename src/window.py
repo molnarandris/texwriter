@@ -21,6 +21,7 @@ gi.require_version("GtkSource", "5")
 
 from gi.repository import Adw
 from gi.repository import Gtk
+from gi.repository import Gio
 from gi.repository import GtkSource
 
 GtkSource.init()
@@ -29,5 +30,14 @@ GtkSource.init()
 class TexwriterWindow(Adw.ApplicationWindow):
     __gtype_name__ = 'TexwriterWindow'
 
+    open_button = Gtk.Template.Child()
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        open_action = Gio.SimpleAction(name="open")
+        open_action.connect("activate", self.on_open)
+        self.add_action(open_action)
+
+    def on_open(self, action, _):
+        print('open')
