@@ -26,18 +26,28 @@ template TexwriterWindow: Adw.ApplicationWindow{
       }
     }
 
-    content: Gtk.ScrolledWindow {
-      hexpand: true;
-      vexpand: true;
-      margin-top: 6;
-      margin-bottom: 6;
-      margin-start: 6;
-      margin-end: 6;
+    content: Adw.ToastOverlay overlay {
+      Gtk.Box {
+        orientation: vertical;
 
-      GtkSource.View text_view {
-        monospace: true;
-        highlight-current-line: true;
-        wrap-mode: word;
+        Adw.Banner banner {
+          revealed: false;
+        }
+
+        Gtk.ScrolledWindow {
+          hexpand: true;
+          vexpand: true;
+          margin-top: 6;
+          margin-bottom: 6;
+          margin-start: 6;
+          margin-end: 6;
+
+          GtkSource.View text_view {
+            monospace: true;
+            highlight-current-line: true;
+            wrap-mode: word;
+          }
+        }
       }
     };
   }

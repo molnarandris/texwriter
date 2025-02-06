@@ -32,6 +32,8 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
     open_button = Gtk.Template.Child()
     text_view = Gtk.Template.Child()
+    banner = Gtk.Template.Child()
+    overlay = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -41,6 +43,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.add_action(open_action)
 
     def on_open(self, action, _):
+        self.banner.set_revealed(False)
         dialog = Gtk.FileDialog()
         filter_text = Gtk.FileFilter()
         filter_text.add_mime_type("text/plain")
@@ -66,8 +69,11 @@ class TexwriterWindow(Adw.ApplicationWindow):
                         err.matches(Gtk.dialog_error_quark(),
                                     Gtk.DialogError.CANCELLED)
             if not cancelled:
-                #FIXME: Display Error to user
-                pass
+                toast = Adw.Toast(
+                    title="Can't open file",
+                    timeout=1.5,
+                )
+                self.overlay.add_toast(toast)
         else:
             if file is not None:
                 self.open_file(file)
@@ -87,8 +93,8 @@ class TexwriterWindow(Adw.ApplicationWindow):
             file_loader.load_finish(result)
         except GLib.Error as err:
             # Loader loads content even if there is an error...
-            #FIXME: Notify user about the error
-            pass
+            self.banner.set_title(err.message)
+            self.banner.set_revealed(True)
         else:
             buffer = self.text_view.props.buffer
             manager = GtkSource.LanguageManager.get_default()
