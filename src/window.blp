@@ -1,5 +1,6 @@
 using Gtk 4.0;
 using Adw 1;
+using GtkSource 5;
 
 template TexwriterWindow: Adw.ApplicationWindow{
   styles ["devel"]
@@ -27,8 +28,9 @@ template TexwriterWindow: Adw.ApplicationWindow{
       margin-start: 6;
       margin-end: 6;
 
-      Gtk.TextView{
+      GtkSource.View{
         monospace: true;
+        highlight-current-line: true;
       }
     };
   }

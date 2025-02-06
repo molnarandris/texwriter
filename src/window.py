@@ -16,9 +16,14 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
+import gi
+gi.require_version("GtkSource", "5")
 
 from gi.repository import Adw
 from gi.repository import Gtk
+from gi.repository import GtkSource
+
+GtkSource.init()
 
 @Gtk.Template(resource_path='/io/github/molnarandris/TeXWriter/window.ui')
 class TexwriterWindow(Adw.ApplicationWindow):
