@@ -17,6 +17,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 import gi
+import asyncio
 gi.require_version("GtkSource", "5")
 
 from gi.repository import Adw
@@ -43,60 +44,68 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.add_action(open_action)
 
     def on_open(self, action, _):
-        self.banner.set_revealed(False)
-        dialog = Gtk.FileDialog()
-        filter_text = Gtk.FileFilter()
-        filter_text.add_mime_type("text/plain")
-        filter_tex = Gtk.FileFilter()
-        filter_tex.add_mime_type("text/x-tex")
-        filter_all = Gtk.FileFilter()
-        filter_all.add_pattern("*")
-        filter_all.set_name("All files")
-        filters = Gio.ListStore.new(Gtk.FileFilter)
-        filters.append(filter_tex)
-        filters.append(filter_text)
-        filters.append(filter_all)
-        dialog.set_filters(filters)
-        dialog.set_default_filter(filter_tex)
-        dialog.open(self, None, self.on_open_response)
+        self.open_task = asyncio.create_task(self.open())
 
-    def on_open_response(self, dialog, result):
+    async def open(self, file=None):
+        if file is None:
+            self.banner.set_revealed(False)
+            dialog = Gtk.FileDialog()
+            filter_text = Gtk.FileFilter()
+            filter_text.add_mime_type("text/plain")
+            filter_tex = Gtk.FileFilter()
+            filter_tex.add_mime_type("text/x-tex")
+            filter_all = Gtk.FileFilter()
+            filter_all.add_pattern("*")
+            filter_all.set_name("All files")
+            filters = Gio.ListStore.new(Gtk.FileFilter)
+            filters.append(filter_tex)
+            filters.append(filter_text)
+            filters.append(filter_all)
+            dialog.set_filters(filters)
+            dialog.set_default_filter(filter_tex)
+            try:
+                file = await dialog.open()
+            except GLib.Error as err:
+                cancelled = err.matches(Gtk.dialog_error_quark(),
+                                        Gtk.DialogError.DISMISSED) or \
+                            err.matches(Gtk.dialog_error_quark(),
+                                        Gtk.DialogError.CANCELLED)
+                if not cancelled:
+                    msg = "Can't open file"
+                    toast = Adw.Toast(title=msg, timeout=2)
+                    self.overlay.add_toast(toast)
+                return
+
+        assert file is not None #I think dialog returns either error or file
+
         try:
-            file = dialog.open_finish(result)
-        except GLib.Error as err:
-            cancelled = err.matches(Gtk.dialog_error_quark(),
-                                    Gtk.DialogError.DISMISSED) or \
-                        err.matches(Gtk.dialog_error_quark(),
-                                    Gtk.DialogError.CANCELLED)
-            if not cancelled:
-                toast = Adw.Toast(
-                    title="Can't open file",
-                    timeout=1.5,
-                )
-                self.overlay.add_toast(toast)
-        else:
-            if file is not None:
-                self.open_file(file)
-
-    def open_file(self, file):
-        source_file = GtkSource.File()
-        source_file.set_location(file)
-        buffer = self.text_view.props.buffer
-        file_loader = GtkSource.FileLoader.new(buffer, source_file)
-        file_loader.load_async(io_priority=GLib.PRIORITY_DEFAULT,
-                               cancellable=None,
-                               progress_callback=None,
-                               callback=self.open_file_cb)
-
-    def open_file_cb(self, file_loader, result, user_data):
-        try:
-            file_loader.load_finish(result)
+            contents = await file.load_contents_async()
         except GLib.Error as err:
             # Loader loads content even if there is an error...
-            self.banner.set_title(err.message)
-            self.banner.set_revealed(True)
-        else:
-            buffer = self.text_view.props.buffer
-            manager = GtkSource.LanguageManager.get_default()
-            latex = manager.get_language("latex")
-            buffer.set_language(latex)
+            toast = Adw.Toast(title=err.message, timeout=2)
+            self.overlay.add_toast(toast)
+            return
+
+        if not contents[0]:
+            path = file.peek_path()
+            msg = f"Unable to open {path}: {contents[1]}"
+            toast = Adw.Toast(title=msg, timeout=2)
+            self.overlay.add_toast(toast)
+            return
+
+        try:
+            text = contents[1].decode('utf-8')
+        except UnicodeError as err:
+            path = file.peek_path()
+            msg = f"Unable to open {path}: the file is not encoded with UTF-8"
+            toast = Adw.Toast(title=msg, timeout=2)
+            self.overlay.add_toast(toast)
+            return
+
+        buffer = self.text_view.props.buffer
+        buffer.set_text(text)
+        start = buffer.get_start_iter()
+        buffer.place_cursor(start)
+        manager = GtkSource.LanguageManager.get_default()
+        latex = manager.get_language("latex")
+        buffer.set_language(latex)
