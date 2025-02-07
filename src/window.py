@@ -48,7 +48,6 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
     async def open(self, file=None):
         if file is None:
-            self.banner.set_revealed(False)
             dialog = Gtk.FileDialog()
             filter_text = Gtk.FileFilter()
             filter_text.add_mime_type("text/plain")
