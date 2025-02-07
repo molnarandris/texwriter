@@ -48,6 +48,12 @@ class TexwriterWindow(Adw.ApplicationWindow):
         buffer = self.text_view.get_buffer()
         buffer.connect("modified-changed", self.on_buffer_modified_changed)
 
+        self.monitor = None
+        self.monitor_change_id = None
+        self.file = None
+
+        self.banner.connect("button-clicked", self.on_banner_button_clicked)
+
     def on_open(self, action, _):
         self.open_task = asyncio.create_task(self.open())
 
@@ -133,6 +139,14 @@ class TexwriterWindow(Adw.ApplicationWindow):
         subtitle = file.get_parent().peek_path()
         self.subtitle.set_label(subtitle)
 
+        self.file = file
+
+        if self.monitor is not None:
+            if self.monitor_change_id is not None:
+                self.monitor.disconnect(self.monitor_change_id)
+        self.monitor = file.monitor(Gio.FileMonitorFlags.NONE, None)
+        self.monitor_change_id = self.monitor.connect("changed", self.on_file_change)
+
     def on_buffer_modified_changed(self, buffer):
         prefix = "• "
         title = self.title.get_label()
@@ -143,4 +157,17 @@ class TexwriterWindow(Adw.ApplicationWindow):
             title.removeprefix(prefix)
 
         self.title.set_label(title)
+
+    def on_file_change(self, monitor, file, other_file, event):
+        if event != Gio.FileMonitorEvent.CHANGES_DONE_HINT:
+            return
+        msg = "File has changed."
+        lbl = "Reload"
+        self.banner.set_title(msg)
+        self.banner.set_button_label(lbl)
+        self.banner.set_revealed(True)
+
+    def on_banner_button_clicked(self, button):
+        self.banner.set_revealed(False)
+        asyncio.create_task(self.open(self.file))
 
