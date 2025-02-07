@@ -24,6 +24,20 @@ template TexwriterWindow: Adw.ApplicationWindow{
         tooltip-text: _("Main Menu");
         menu-model: primary_menu;
       }
+
+      title-widget: Gtk.Box {
+        orientation: vertical;
+
+        Gtk.Label title {
+          styles ['title']
+          label: "Untitled";
+        }
+
+        Gtk.Label subtitle {
+          styles ['subtitle']
+          label: "";
+        }
+      };
     }
 
     content: Adw.ToastOverlay overlay {

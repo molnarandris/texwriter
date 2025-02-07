@@ -35,6 +35,8 @@ class TexwriterWindow(Adw.ApplicationWindow):
     text_view = Gtk.Template.Child()
     banner = Gtk.Template.Child()
     overlay = Gtk.Template.Child()
+    title = Gtk.Template.Child()
+    subtitle = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -42,6 +44,9 @@ class TexwriterWindow(Adw.ApplicationWindow):
         open_action = Gio.SimpleAction(name="open")
         open_action.connect("activate", self.on_open)
         self.add_action(open_action)
+
+        buffer = self.text_view.get_buffer()
+        buffer.connect("modified-changed", self.on_buffer_modified_changed)
 
     def on_open(self, action, _):
         self.open_task = asyncio.create_task(self.open())
@@ -105,6 +110,32 @@ class TexwriterWindow(Adw.ApplicationWindow):
         buffer.set_text(text)
         start = buffer.get_start_iter()
         buffer.place_cursor(start)
+        buffer.set_modified(False)
+
         manager = GtkSource.LanguageManager.get_default()
         latex = manager.get_language("latex")
         buffer.set_language(latex)
+
+        info = file.query_info("standard::display-name",
+                               Gio.FileQueryInfoFlags.NONE)
+        if info:
+            display_name = info.get_attribute_string("standard::display-name")
+        else:
+            display_name = file.get_basename()
+
+        self.title.set_label(display_name)
+
+        subtitle = file.get_parent().peek_path()
+        self.subtitle.set_label(subtitle)
+
+    def on_buffer_modified_changed(self, buffer):
+        prefix = "• "
+        title = self.title.get_label()
+        if buffer.get_modified():
+            if not title.startswith(prefix):
+                title = prefix + title
+        else:
+            title.removeprefix(prefix)
+
+        self.title.set_label(title)
+
