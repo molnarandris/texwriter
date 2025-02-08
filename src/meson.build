@@ -39,6 +39,7 @@ texwriter_sources = [
   '__init__.py',
   'main.py',
   'window.py',
+  'latexfile.py',
 ]
 
 install_data(texwriter_sources, install_dir: moduledir)

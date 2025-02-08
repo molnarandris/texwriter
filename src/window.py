@@ -25,6 +25,8 @@ from gi.repository import Gtk
 from gi.repository import Gio, GLib
 from gi.repository import GtkSource
 
+from .latexfile import LatexFile, LatexFileError
+
 GtkSource.init()
 
 @Gtk.Template(resource_path='/io/github/molnarandris/TeXWriter/window.ui')
@@ -47,10 +49,15 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
         buffer = self.text_view.get_buffer()
         buffer.connect("modified-changed", self.on_buffer_modified_changed)
+        manager = GtkSource.LanguageManager.get_default()
+        latex = manager.get_language("latex")
+        buffer.set_language(latex)
 
         self.monitor = None
         self.monitor_change_id = None
-        self.file = None
+        self.latexfile = LatexFile()
+
+        self.latexfile.connect("modified", self.on_file_modified)
 
         self.banner.connect("button-clicked", self.on_banner_button_clicked)
 
@@ -93,27 +100,13 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
         assert file is not None #I think dialog returns either error or file
 
+        self.latexfile.file = file
+
         try:
-            contents = await file.load_contents_async()
-        except GLib.Error as err:
+            text = await self.latexfile.load_contents_async()
+        except LatexFileError as err:
             # Loader loads content even if there is an error...
             toast = Adw.Toast(title=err.message, timeout=2)
-            self.overlay.add_toast(toast)
-            return
-
-        if not contents[0]:
-            path = file.peek_path()
-            msg = f"Unable to open {path}: {contents[1]}"
-            toast = Adw.Toast(title=msg, timeout=2)
-            self.overlay.add_toast(toast)
-            return
-
-        try:
-            text = contents[1].decode('utf-8')
-        except UnicodeError as err:
-            path = file.peek_path()
-            msg = f"Unable to open {path}: the file is not encoded with UTF-8"
-            toast = Adw.Toast(title=msg, timeout=2)
             self.overlay.add_toast(toast)
             return
 
@@ -123,29 +116,9 @@ class TexwriterWindow(Adw.ApplicationWindow):
         buffer.place_cursor(start)
         buffer.set_modified(False)
 
-        manager = GtkSource.LanguageManager.get_default()
-        latex = manager.get_language("latex")
-        buffer.set_language(latex)
+        self.title.set_label(self.latexfile.display_name)
+        self.subtitle.set_label(self.latexfile.pwd_path)
 
-        info = file.query_info("standard::display-name",
-                               Gio.FileQueryInfoFlags.NONE)
-        if info:
-            display_name = info.get_attribute_string("standard::display-name")
-        else:
-            display_name = file.get_basename()
-
-        self.title.set_label(display_name)
-
-        subtitle = file.get_parent().peek_path()
-        self.subtitle.set_label(subtitle)
-
-        self.file = file
-
-        if self.monitor is not None:
-            if self.monitor_change_id is not None:
-                self.monitor.disconnect(self.monitor_change_id)
-        self.monitor = file.monitor(Gio.FileMonitorFlags.NONE, None)
-        self.monitor_change_id = self.monitor.connect("changed", self.on_file_change)
 
     def on_buffer_modified_changed(self, buffer):
         prefix = "• "
@@ -158,9 +131,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
         self.title.set_label(title)
 
-    def on_file_change(self, monitor, file, other_file, event):
-        if event != Gio.FileMonitorEvent.CHANGES_DONE_HINT:
-            return
+    def on_file_modified(self, latexfile):
         msg = "File has changed."
         lbl = "Reload"
         self.banner.set_title(msg)
@@ -169,5 +140,5 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
     def on_banner_button_clicked(self, button):
         self.banner.set_revealed(False)
-        asyncio.create_task(self.open(self.file))
+        asyncio.create_task(self.open(self.latexfile.file))
 
