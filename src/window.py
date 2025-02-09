@@ -56,6 +56,14 @@ class TexwriterWindow(Adw.ApplicationWindow):
         action.connect("activate", self.on_compile_cancel_action)
         self.add_action(action)
 
+        action = Gio.SimpleAction(name="save")
+        action.connect("activate", self.on_save_action)
+        self.add_action(action)
+
+        action = Gio.SimpleAction(name="save-as")
+        action.connect("activate", self.on_save_as_action)
+        self.add_action(action)
+
         buffer = self.text_view.get_buffer()
         buffer.connect("modified-changed", self.on_buffer_modified_changed)
         manager = GtkSource.LanguageManager.get_default()
@@ -181,3 +189,9 @@ class TexwriterWindow(Adw.ApplicationWindow):
         if self._compile_task is not None:
             self._compile_task.cancel()
         self._compile_task = None
+
+    def on_save_action(self, action, _):
+        print("Save")
+
+    def on_save_as_action(self, action, _):
+        print("Save as")

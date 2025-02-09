@@ -88,6 +88,10 @@ template $TexwriterWindow: Adw.ApplicationWindow{
 
 menu primary_menu {
   section {
+    item (_("Save"), "win.save")
+    item (_("Save As"), "win.save-as")
+  }
+  section {
     item (_("Preferences"), "app.preferences")
     item (_("Keyboard Shortcuts"), "win.show-help-overlay")
     item (_("About TeXWriter"), "app.about")
