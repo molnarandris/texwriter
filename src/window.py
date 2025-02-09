@@ -25,7 +25,7 @@ from gi.repository import Gtk
 from gi.repository import Gio, GLib
 from gi.repository import GtkSource
 
-from .latexfile import LatexFile, LatexFileError
+from .latexfile import LatexFile, LatexFileError, LatexCompileError
 
 GtkSource.init()
 
@@ -34,6 +34,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
     __gtype_name__ = 'TexwriterWindow'
 
     open_button = Gtk.Template.Child()
+    compile_button_stack = Gtk.Template.Child()
     text_view = Gtk.Template.Child()
     banner = Gtk.Template.Child()
     overlay = Gtk.Template.Child()
@@ -47,6 +48,14 @@ class TexwriterWindow(Adw.ApplicationWindow):
         open_action.connect("activate", self.on_open)
         self.add_action(open_action)
 
+        action = Gio.SimpleAction(name="compile")
+        action.connect("activate", self.on_compile_action)
+        self.add_action(action)
+
+        action = Gio.SimpleAction(name="compile-cancel")
+        action.connect("activate", self.on_compile_cancel_action)
+        self.add_action(action)
+
         buffer = self.text_view.get_buffer()
         buffer.connect("modified-changed", self.on_buffer_modified_changed)
         manager = GtkSource.LanguageManager.get_default()
@@ -56,6 +65,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.monitor = None
         self.monitor_change_id = None
         self.latexfile = LatexFile()
+        self._compile_task = None
 
         self.latexfile.connect("modified", self.on_file_modified)
 
@@ -142,3 +152,24 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.banner.set_revealed(False)
         asyncio.create_task(self.open(self.latexfile.file))
 
+    def on_compile_action(self, action, _):
+        if self._compile_task is not None:
+            self._compile_task.cancel()
+        self.compile_button_stack.set_visible_child_name("cancel")
+        self._compile_task = asyncio.create_task(self.compile())
+
+    async def compile(self):
+        try:
+            await self.latexfile.compile()
+        except asyncio.CancelledError:
+            print("Compilation canceled")
+        except LatexCompileError as err:
+            toast = Adw.Toast(title=err.message, timeout=2)
+            self.overlay.add_toast(toast)
+        finally:
+            self.compile_button_stack.set_visible_child_name("compile")
+            self._compile_task = None
+
+    def on_compile_cancel_action(self, action, _):
+        if self._compile_task is not None:
+            self._compile_task.cancel()

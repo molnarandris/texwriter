@@ -24,6 +24,25 @@ template TexwriterWindow: Adw.ApplicationWindow{
         tooltip-text: _("Main Menu");
         menu-model: primary_menu;
       }
+      [end]
+      Gtk.Stack compile_button_stack {
+        Gtk.StackPage {
+          name: "compile";
+          child: Gtk.Button {
+            sensitive: true;
+            icon-name: "media-playback-start-symbolic";
+            action-name: "win.compile";
+          };
+        }
+        Gtk.StackPage {
+          name: "cancel";
+          child: Gtk.Button {
+            sensitive: true;
+            icon-name: "media-playback-stop-symbolic";
+            action-name: "win.compile-cancel";
+          };
+        }
+      }
 
       title-widget: Gtk.Box {
         orientation: vertical;

@@ -20,11 +20,16 @@
 import gi
 import asyncio
 
-from gi.repository import GObject, Gio
+from gi.repository import GObject, Gio, GLib
 
 class LatexFileError(Exception):
     def __init__(self, message):
         self.message = message
+
+class LatexCompileError(Exception):
+    def __init__(self, message):
+        self.message = message
+
 
 class LatexFile(GObject.Object):
     __gtype_name__ = "LatexFile"
@@ -54,7 +59,11 @@ class LatexFile(GObject.Object):
 
     @property
     def pwd_path(self):
-        return self.file.get_parent().peek_path()
+        return self._file.get_parent().peek_path()
+
+    @property
+    def path(self):
+        return self._file.peek_path()
 
     @property
     def display_name(self):
@@ -89,4 +98,30 @@ class LatexFile(GObject.Object):
             raise LatexFileError(msg)
 
         return text
+
+    async def compile(self):
+        """Run LaTeX asynchronously on self.file."""
+        cmd = ['flatpak-spawn', '--host', 'latexmk', '-synctex=1',
+               '-interaction=nonstopmode', '-pdf', "-g",
+               "--output-directory=" + self.pwd_path,
+               self.path]
+
+        process = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+
+        stdout, stderr = await process.communicate()
+
+        if stdout:
+            print(f"Output:\n{stdout.decode()}")
+        if stderr:
+            print(f"Errors:\n{stderr.decode()}")
+
+        if process.returncode == 0:
+            print("Compile succeeded")
+        else:
+            msg = f"Compilation of {self.display_name} failed"
+            raise LatexCompileError(msg)
 
