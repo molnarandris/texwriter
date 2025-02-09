@@ -46,6 +46,8 @@ class LatexFile(GObject.Object):
 
     @property
     def file(self):
+        if self._file is None:
+            raise LatexFileError("File does not exist")
         return self._file
 
     @file.setter
@@ -59,11 +61,11 @@ class LatexFile(GObject.Object):
 
     @property
     def pwd_path(self):
-        return self._file.get_parent().peek_path()
+        return self.file.get_parent().peek_path()
 
     @property
     def path(self):
-        return self._file.peek_path()
+        return self.file.peek_path()
 
     @property
     def display_name(self):

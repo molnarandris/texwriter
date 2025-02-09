@@ -172,6 +172,8 @@ class TexwriterWindow(Adw.ApplicationWindow):
         except LatexCompileError as err:
             toast = Adw.Toast(title=err.message, timeout=2)
             self.overlay.add_toast(toast)
+        except LatexFileError as err:
+            print(err)
         finally:
             self.compile_button_stack.set_visible_child_name("compile")
 
