@@ -54,9 +54,11 @@ class LatexFile(GObject.Object):
     def file(self, file):
         if self._file_monitor_id is not None and self._monitor is not None:
             self._monitor.disconnect(self._file_monitor_id)
-        monitor = file.monitor(Gio.FileMonitorFlags.NONE, None)
-        self._file_monitor_id = monitor.connect("changed", self.on_file_change)
-        self._monitor = monitor
+        if file is not None:
+            monitor = file.monitor(Gio.FileMonitorFlags.NONE, None)
+            self._file_monitor_id = monitor.connect("changed",
+                                                    self.on_file_change)
+            self._monitor = monitor
         self._file = file
 
     @property
@@ -128,4 +130,13 @@ class LatexFile(GObject.Object):
         else:
             msg = f"Compilation of {self.display_name} failed"
             raise LatexCompileError(msg)
+
+    async def replace_contents(self, text):
+        with GObject.signal_handler_block(self._monitor,self._file_monitor_id):
+            try:
+                with open(self.path, "w") as f:
+                    f.write(text)
+                await asyncio.sleep(0.1)
+            except PermissionError:
+                raise LatexFileError(f"Permission denied: {self.path}")
 

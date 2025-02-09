@@ -145,7 +145,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
             if not title.startswith(prefix):
                 title = prefix + title
         else:
-            title.removeprefix(prefix)
+            title = title.removeprefix(prefix)
 
         self.title.set_label(title)
 
@@ -191,7 +191,55 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self._compile_task = None
 
     def on_save_action(self, action, _):
-        print("Save")
+        try:
+            file = self.latexfile.file
+        except LatexFileError:
+            file = None
+        self._save_task = asyncio.create_task(self.save(file))
 
     def on_save_as_action(self, action, _):
-        print("Save as")
+        self._save_task = asyncio.create_task(self.save(None))
+
+    async def save(self, file):
+        if file is None:
+            native = Gtk.FileDialog()
+            try:
+                file = await native.save()
+            except GLib.Error as err:
+                cancelled = err.matches(Gtk.dialog_error_quark(),
+                                        Gtk.DialogError.DISMISSED) or \
+                            err.matches(Gtk.dialog_error_quark(),
+                                        Gtk.DialogError.CANCELLED)
+                if not cancelled:
+                    msg = "Can't save to file"
+                    toast = Adw.Toast(title=msg, timeout=2)
+                    self.overlay.add_toast(toast)
+                return
+
+            try:
+                old_file = self.latexfile.file
+            except LatexFileError:
+                old_file = None
+            self.latexfile.file = file
+
+        buffer = self.text_view.props.buffer
+        start = buffer.get_start_iter()
+        end = buffer.get_end_iter()
+        text = buffer.get_text(start, end, False)
+
+        try:
+            await self.latexfile.replace_contents(text)
+        except LatexFileError as err:
+            toast = Adw.Toast(title=err.message, timeout=2)
+            self.overlay.add_toast(toast)
+            self.latexfile.file = old_file
+        else:
+            buffer.set_modified(False)
+
+        try:
+            self.title.set_label(self.latexfile.display_name)
+            self.subtitle.set_label(self.latexfile.pwd_path)
+        except LatexFileError:
+            self.title.set_label("Untitled")
+            self.subtitle.set_label("Unsaved")
+
