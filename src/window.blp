@@ -32,6 +32,7 @@ template $TexwriterWindow: Adw.ApplicationWindow{
             sensitive: true;
             icon-name: "media-playback-start-symbolic";
             action-name: "win.compile";
+            tooltip-text: _("Compile Document");
           };
         }
         Gtk.StackPage {
@@ -40,6 +41,7 @@ template $TexwriterWindow: Adw.ApplicationWindow{
             sensitive: true;
             icon-name: "media-playback-stop-symbolic";
             action-name: "win.compile-cancel";
+            tooltip-text: _("Cancel Compilation");
           };
         }
       }
