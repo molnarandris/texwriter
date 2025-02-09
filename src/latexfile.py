@@ -64,6 +64,12 @@ class LatexFile(GObject.Object):
         return filters
 
     @property
+    def exists(self):
+        if self._file is None:
+            return False
+        return self._file.query_exists()
+
+    @property
     def file(self):
         if self._file is None:
             raise LatexFileError("File does not exist")

@@ -158,6 +158,13 @@ class TexwriterWindow(Adw.ApplicationWindow):
             await old_task
         self.compile_button_stack.set_visible_child_name("cancel")
 
+        if not self.latexfile.exists:
+            await self.save(None)
+
+        buffer = self.text_view.props.buffer
+        if buffer.get_modified():
+            await self.save(self.latexfile.file)
+
         try:
             await self.latexfile.compile()
         except asyncio.CancelledError:
