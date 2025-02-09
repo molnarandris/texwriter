@@ -62,25 +62,37 @@ template $TexwriterWindow: Adw.ApplicationWindow{
     }
 
     content: Adw.ToastOverlay overlay {
-      Gtk.Box {
-        orientation: vertical;
+      Gtk.Paned{
+        resize-start-child: true;
+        resize-end-child: true;
 
-        Adw.Banner banner {
-          revealed: false;
+        Gtk.Box {
+          orientation: vertical;
+
+          Adw.Banner banner {
+            revealed: false;
+          }
+
+          Gtk.ScrolledWindow {
+            hexpand: true;
+            vexpand: true;
+            margin-top: 6;
+            margin-bottom: 6;
+            margin-start: 6;
+
+            GtkSource.View text_view {
+              monospace: true;
+              highlight-current-line: true;
+              wrap-mode: word;
+            }
+          }
         }
 
-        Gtk.ScrolledWindow {
-          hexpand: true;
-          vexpand: true;
-          margin-top: 6;
-          margin-bottom: 6;
-          margin-start: 6;
-          margin-end: 6;
-
-          GtkSource.View text_view {
-            monospace: true;
-            highlight-current-line: true;
-            wrap-mode: word;
+        Adw.ViewStack {
+          Adw.ViewStackPage {
+            child: Adw.StatusPage {
+              title: "No Pdf to display";
+            };
           }
         }
       }
