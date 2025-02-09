@@ -20,7 +20,7 @@
 import gi
 import asyncio
 
-from gi.repository import GObject, Gio, GLib
+from gi.repository import GObject, Gio, GLib, Gtk
 
 class LatexFileError(Exception):
     def __init__(self, message):
@@ -43,6 +43,25 @@ class LatexFile(GObject.Object):
         self._file = None
         self._file_monitor_id = None
         self._monitor = None
+
+    @classmethod
+    def create_filters(cls):
+        filters = Gio.ListStore.new(Gtk.FileFilter)
+
+        f = Gtk.FileFilter()
+        f.add_mime_type("text/x-tex")
+        filters.append(f)
+
+        f = Gtk.FileFilter()
+        f.add_mime_type("text/plain")
+        filters.append(f)
+
+        f = Gtk.FileFilter()
+        f.add_pattern("*")
+        f.set_name("All files")
+        filters.append(f)
+
+        return filters
 
     @property
     def file(self):

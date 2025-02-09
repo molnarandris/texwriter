@@ -85,22 +85,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
     async def open(self, file=None):
         if file is None:
             dialog = Gtk.FileDialog()
-
-            filters = Gio.ListStore.new(Gtk.FileFilter)
-
-            f = Gtk.FileFilter()
-            f.add_mime_type("text/x-tex")
-            filters.append(f)
-
-            f = Gtk.FileFilter()
-            f.add_mime_type("text/plain")
-            filters.append(f)
-
-            f = Gtk.FileFilter()
-            f.add_pattern("*")
-            f.set_name("All files")
-            filters.append(f)
-
+            filters = LatexFile.create_filters()
             dialog.set_filters(filters)
 
             try:
@@ -203,6 +188,8 @@ class TexwriterWindow(Adw.ApplicationWindow):
     async def save(self, file):
         if file is None:
             native = Gtk.FileDialog()
+            filters = LatexFile.create_filters()
+            native.set_filters(filters)
             try:
                 file = await native.save()
             except GLib.Error as err:
