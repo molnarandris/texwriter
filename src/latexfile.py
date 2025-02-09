@@ -115,9 +115,11 @@ class LatexFile(GObject.Object):
         stdout, stderr = await process.communicate()
 
         if stdout:
-            print(f"Output:\n{stdout.decode()}")
+            #print(f"Output:\n{stdout.decode()}")
+            pass
         if stderr:
-            print(f"Errors:\n{stderr.decode()}")
+            #print(f"Errors:\n{stderr.decode()}")
+            pass
 
         if process.returncode == 0:
             print("Compile succeeded")

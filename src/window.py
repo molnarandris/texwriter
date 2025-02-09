@@ -154,11 +154,17 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
     def on_compile_action(self, action, _):
         if self._compile_task is not None:
-            self._compile_task.cancel()
-        self.compile_button_stack.set_visible_child_name("cancel")
-        self._compile_task = asyncio.create_task(self.compile())
+            old_task = self._compile_task
+        else:
+            old_task = None
+        self._compile_task = asyncio.create_task(self.compile(old_task))
 
-    async def compile(self):
+    async def compile(self, old_task=None):
+        if old_task is not None:
+            old_task.cancel()
+            await old_task
+        self.compile_button_stack.set_visible_child_name("cancel")
+
         try:
             await self.latexfile.compile()
         except asyncio.CancelledError:
@@ -168,8 +174,8 @@ class TexwriterWindow(Adw.ApplicationWindow):
             self.overlay.add_toast(toast)
         finally:
             self.compile_button_stack.set_visible_child_name("compile")
-            self._compile_task = None
 
     def on_compile_cancel_action(self, action, _):
         if self._compile_task is not None:
             self._compile_task.cancel()
+        self._compile_task = None
