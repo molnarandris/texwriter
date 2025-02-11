@@ -35,10 +35,20 @@ class TexwriterApplication(Adw.Application):
     def __init__(self):
         super().__init__(application_id='io.github.molnarandris.TeXWriter',
                          flags=Gio.ApplicationFlags.DEFAULT_FLAGS)
-        self.create_action('quit', lambda *_: self.quit(), ['<primary>q'])
-        self.create_action('about', self.on_about_action)
-        self.create_action('preferences', self.on_preferences_action)
 
+        action = Gio.SimpleAction(name='quit')
+        action.connect('activate', lambda *_: self.quit())
+        self.add_action(action)
+
+        action = Gio.SimpleAction(name='about')
+        action.connect('activate', self.on_about_action)
+        self.add_action(action)
+
+        action = Gio.SimpleAction(name='preferences')
+        action.connect('activate', self.on_preferences_action)
+        self.add_action(action)
+
+        self.set_accels_for_action('app.quit', ['<primary>q'])
         self.set_accels_for_action('win.open', ['<Ctrl>o'])
         self.set_accels_for_action('win.compile', ['F5'])
         self.set_accels_for_action('win.save', ['<Ctrl>s'])
@@ -70,21 +80,6 @@ class TexwriterApplication(Adw.Application):
     def on_preferences_action(self, widget, _):
         """Callback for the app.preferences action."""
         print('app.preferences action activated')
-
-    def create_action(self, name, callback, shortcuts=None):
-        """Add an application action.
-
-        Args:
-            name: the name of the action
-            callback: the function to be called when the action is
-              activated
-            shortcuts: an optional list of accelerators
-        """
-        action = Gio.SimpleAction.new(name, None)
-        action.connect("activate", callback)
-        self.add_action(action)
-        if shortcuts:
-            self.set_accels_for_action(f"app.{name}", shortcuts)
 
 
 def main(version):

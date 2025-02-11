@@ -45,9 +45,9 @@ class TexwriterWindow(Adw.ApplicationWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        open_action = Gio.SimpleAction(name="open")
-        open_action.connect("activate", self.on_open)
-        self.add_action(open_action)
+        action = Gio.SimpleAction(name="open")
+        action.connect("activate", self.on_open)
+        self.add_action(action)
 
         action = Gio.SimpleAction(name="compile")
         action.connect("activate", self.on_compile_action)
