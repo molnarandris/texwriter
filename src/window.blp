@@ -62,7 +62,7 @@ template $TexwriterWindow: Adw.ApplicationWindow{
     }
 
     content: Adw.ToastOverlay overlay {
-      Gtk.Paned{
+      Gtk.Paned paned {
         resize-start-child: true;
         resize-end-child: true;
 
@@ -79,6 +79,7 @@ template $TexwriterWindow: Adw.ApplicationWindow{
             margin-top: 6;
             margin-bottom: 6;
             margin-start: 6;
+            width-request: 394;
 
             GtkSource.View text_view {
               monospace: true;
@@ -92,6 +93,7 @@ template $TexwriterWindow: Adw.ApplicationWindow{
           Adw.ViewStackPage {
             child: Adw.StatusPage {
               title: "No Pdf to display";
+              width-request: 400;
             };
           }
         }

@@ -40,6 +40,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
     overlay = Gtk.Template.Child()
     title = Gtk.Template.Child()
     subtitle = Gtk.Template.Child()
+    paned = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -78,6 +79,9 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.latexfile.connect("modified", self.on_file_modified)
 
         self.banner.connect("button-clicked", self.on_banner_button_clicked)
+
+        self.paned.set_resize_start_child(True)
+        self.paned.set_resize_end_child(True)
 
     def on_open(self, action, _):
         self.open_task = asyncio.create_task(self.open())
