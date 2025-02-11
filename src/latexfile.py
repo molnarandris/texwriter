@@ -130,7 +130,8 @@ class LatexFile(GObject.Object):
 
     async def compile(self):
         """Run LaTeX asynchronously on self.file."""
-        cmd = ['flatpak-spawn', '--host', 'latexmk', '-synctex=1',
+        interpreter = 'latexmk'
+        cmd = ['flatpak-spawn', '--host', interpreter, '-synctex=1',
                '-interaction=nonstopmode', '-pdf', "-g",
                "--output-directory=" + self.pwd_path,
                self.path]
@@ -146,14 +147,15 @@ class LatexFile(GObject.Object):
         if stdout:
             #print(f"Output:\n{stdout.decode()}")
             pass
-        if stderr:
-            #print(f"Errors:\n{stderr.decode()}")
-            pass
 
         if process.returncode == 0:
             print("Compile succeeded")
         else:
             msg = f"Compilation of {self.display_name} failed"
+            if stderr:
+                err_msg = stderr.decode()
+                if err_msg.startswith("Portal call failed:"):
+                    msg = msg + f": {interpreter} is not installed"
             raise LatexCompileError(msg)
 
     async def replace_contents(self, text):
