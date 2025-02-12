@@ -90,14 +90,14 @@ class TexwriterWindow(Adw.ApplicationWindow):
         if file is None:
             dialog = Gtk.FileDialog()
             dialog.set_filters(LATEX_FILTER)
+            dialog.set_modal(True)
 
             try:
-                file = await dialog.open()
+                file = await dialog.open(parent=self)
             except GLib.Error as err:
-                cancelled = err.matches(Gtk.dialog_error_quark(),
-                                        Gtk.DialogError.DISMISSED) or \
-                            err.matches(Gtk.dialog_error_quark(),
-                                        Gtk.DialogError.CANCELLED)
+                quark = Gtk.dialog_error_quark()
+                cancelled = err.matches(quark, Gtk.DialogError.DISMISSED) or \
+                            err.matches(quark, Gtk.DialogError.CANCELLED)
                 if not cancelled:
                     msg = "Can't open file"
                     toast = Adw.Toast(title=msg, timeout=2)
@@ -197,15 +197,15 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
     async def save(self, file):
         if file is None:
-            native = Gtk.FileDialog()
-            native.set_filters(LATEX_FILTER)
+            dialog = Gtk.FileDialog()
+            dialog.set_filters(LATEX_FILTER)
+            dialog.set_modal(True)
             try:
-                file = await native.save()
+                file = await dialog.save(parent=self)
             except GLib.Error as err:
-                cancelled = err.matches(Gtk.dialog_error_quark(),
-                                        Gtk.DialogError.DISMISSED) or \
-                            err.matches(Gtk.dialog_error_quark(),
-                                        Gtk.DialogError.CANCELLED)
+                quark = Gtk.dialog_error_quark()
+                cancelled = err.matches(quark, Gtk.DialogError.DISMISSED) or \
+                            err.matches(quark, Gtk.DialogError.CANCELLED)
                 if not cancelled:
                     msg = "Can't save to file"
                     toast = Adw.Toast(title=msg, timeout=2)
