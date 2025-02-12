@@ -24,6 +24,7 @@ from gi.repository import Adw
 from gi.repository import Gtk
 from gi.repository import Gio, GLib
 from gi.repository import GtkSource
+from gi.repository import GObject
 
 from .latexfile import LatexFile, LatexFileError, LatexCompileError, LATEX_FILTER
 
@@ -83,6 +84,9 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.paned.set_resize_start_child(True)
         self.paned.set_resize_end_child(True)
 
+        self.latexfile.bind_property("display-name", self.title, "label",
+                                     GObject.BindingFlags.SYNC_CREATE)
+
     def on_open(self, action, _):
         self.open_task = asyncio.create_task(self.open())
 
@@ -122,19 +126,14 @@ class TexwriterWindow(Adw.ApplicationWindow):
         buffer.place_cursor(start)
         buffer.set_modified(False)
 
-        self.title.set_label(self.latexfile.display_name)
         self.subtitle.set_label(self.latexfile.pwd_path)
 
 
     def on_buffer_modified_changed(self, buffer):
-        prefix = "• "
-        title = self.title.get_label()
         if buffer.get_modified():
-            if not title.startswith(prefix):
-                title = prefix + title
+            title = "• " + self.latexfile.display_name
         else:
-            title = title.removeprefix(prefix)
-
+            title = self.latexfile.display_name
         self.title.set_label(title)
 
     def on_file_modified(self, latexfile):
@@ -233,9 +232,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
             buffer.set_modified(False)
 
         try:
-            self.title.set_label(self.latexfile.display_name)
             self.subtitle.set_label(self.latexfile.pwd_path)
         except LatexFileError:
-            self.title.set_label("Untitled")
             self.subtitle.set_label("Unsaved")
 

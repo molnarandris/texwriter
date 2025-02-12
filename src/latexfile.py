@@ -58,8 +58,8 @@ class LatexFile(GObject.Object):
     def __init__(self):
         super().__init__()
         self._file = None
-        self._file_monitor_id = None
         self._monitor = None
+        self._display_name = 'Unsaved File'
 
     @property
     def exists(self):
@@ -75,13 +75,20 @@ class LatexFile(GObject.Object):
 
     @file.setter
     def file(self, file):
-        if self._file_monitor_id is not None and self._monitor is not None:
-            self._monitor.disconnect(self._file_monitor_id)
-        if file is not None:
-            monitor = file.monitor(Gio.FileMonitorFlags.NONE, None)
-            self._file_monitor_id = monitor.connect("changed",
-                                                    self.on_file_change)
-            self._monitor = monitor
+        if self._monitor is not None:
+            self._monitor.disconnect_by_func(self.on_file_change)
+        if file is not None and file.query_exists():
+            self._monitor = file.monitor(Gio.FileMonitorFlags.NONE, None)
+            self._monitor.connect("changed", self.on_file_change)
+
+            info_str = "standard::display-name"
+            info = file.query_info(info_str, Gio.FileQueryInfoFlags.NONE)
+            if info:
+                self.display_name = info.get_attribute_string(info_str)
+            else:
+                self.display_name = self._file.get_basename()
+        else:
+            self.display_name = "Unsaved File"
         self._file = file
 
     @property
@@ -92,16 +99,13 @@ class LatexFile(GObject.Object):
     def path(self):
         return self.file.peek_path()
 
-    @property
+    @GObject.Property(type=str)
     def display_name(self):
-        file = self.file
-        info = file.query_info("standard::display-name",
-                               Gio.FileQueryInfoFlags.NONE)
-        if info:
-            display_name = info.get_attribute_string("standard::display-name")
-        else:
-            display_name = file.get_basename()
-        return display_name
+        return self._display_name
+
+    @display_name.setter
+    def display_name(self, display_name):
+        self._display_name = display_name
 
     def on_file_change(self, monitor, file, other_file, event):
         if event != Gio.FileMonitorEvent.CHANGES_DONE_HINT:
@@ -157,11 +161,13 @@ class LatexFile(GObject.Object):
             raise LatexCompileError(msg)
 
     async def replace_contents(self, text):
-        with GObject.signal_handler_block(self._monitor,self._file_monitor_id):
-            try:
-                with open(self.path, "w") as f:
-                    f.write(text)
-                await asyncio.sleep(0.1)
-            except PermissionError:
-                raise LatexFileError(f"Permission denied: {self.path}")
+        self._monitor.handler_block_by_func(self.on_file_change)
+        try:
+            with open(self.path, "w") as f:
+                f.write(text)
+            await asyncio.sleep(0.1)
+        except PermissionError:
+            raise LatexFileError(f"Permission denied: {self.path}")
+        finally:
+            self._monitor.handler_unblock_by_func(self.on_file_change)
 
