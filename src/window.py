@@ -27,6 +27,7 @@ from gi.repository import GtkSource
 from gi.repository import GObject
 
 from .latexfile import LatexFile, LatexFileError, LatexCompileError, LATEX_FILTER
+from .pdfviewer import PdfViewer
 
 GtkSource.init()
 
