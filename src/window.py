@@ -25,7 +25,7 @@ from gi.repository import Gtk
 from gi.repository import Gio, GLib
 from gi.repository import GtkSource
 
-from .latexfile import LatexFile, LatexFileError, LatexCompileError
+from .latexfile import LatexFile, LatexFileError, LatexCompileError, LATEX_FILTER
 
 GtkSource.init()
 
@@ -89,8 +89,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
     async def open(self, file=None):
         if file is None:
             dialog = Gtk.FileDialog()
-            filters = LatexFile.create_filters()
-            dialog.set_filters(filters)
+            dialog.set_filters(LATEX_FILTER)
 
             try:
                 file = await dialog.open()
@@ -199,8 +198,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
     async def save(self, file):
         if file is None:
             native = Gtk.FileDialog()
-            filters = LatexFile.create_filters()
-            native.set_filters(filters)
+            native.set_filters(LATEX_FILTER)
             try:
                 file = await native.save()
             except GLib.Error as err:
