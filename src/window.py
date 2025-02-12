@@ -43,6 +43,8 @@ class TexwriterWindow(Adw.ApplicationWindow):
     title = Gtk.Template.Child()
     subtitle = Gtk.Template.Child()
     paned = Gtk.Template.Child()
+    pdf_view_stack = Gtk.Template.Child()
+    pdfviewer = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -126,6 +128,8 @@ class TexwriterWindow(Adw.ApplicationWindow):
         buffer.set_modified(False)
 
         self.subtitle.set_label(self.latexfile.pwd_path)
+        self.pdfviewer.set_file(self.latexfile.path[:-3] + "pdf")
+        self.pdf_view_stack.set_visible_child_name("viewer")
 
 
     def on_buffer_modified_changed(self, buffer):
