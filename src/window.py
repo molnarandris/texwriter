@@ -72,8 +72,6 @@ class TexwriterWindow(Adw.ApplicationWindow):
         latex = manager.get_language("latex")
         buffer.set_language(latex)
 
-        self.monitor = None
-        self.monitor_change_id = None
         self.latexfile = LatexFile()
         self._compile_task = None
 
