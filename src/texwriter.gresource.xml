@@ -2,6 +2,7 @@
 <gresources>
   <gresource prefix="/io/github/molnarandris/TeXWriter">
     <file preprocess="xml-stripblanks">window.ui</file>
+    <file preprocess="xml-stripblanks">pdfviewer.ui</file>
     <file preprocess="xml-stripblanks">gtk/help-overlay.ui</file>
   </gresource>
 </gresources>

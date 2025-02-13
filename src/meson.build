@@ -5,7 +5,8 @@ gnome = import('gnome')
 blueprints = custom_target('blueprints',
   input: files(
     'window.blp',
-    'gtk/help-overlay.blp'
+    'gtk/help-overlay.blp',
+    'pdfviewer.blp'
   ),
   output: '.',
   command: [find_program('blueprint-compiler'), 'batch-compile', '@OUTPUT@', '@CURRENT_SOURCE_DIR@', '@INPUT@'],

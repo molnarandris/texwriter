@@ -4,7 +4,7 @@ gi.require_version('Poppler', '0.18')
 from gi.repository import Poppler
 from gi.repository import Graphene, Gdk
 
-
+@Gtk.Template(resource_path='/io/github/molnarandris/TeXWriter/pdfviewer.ui')
 class PdfViewer(Gtk.Widget):
     __gtype_name__ = "PdfViewer"
 
