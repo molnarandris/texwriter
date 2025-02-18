@@ -99,7 +99,8 @@ template $TexwriterWindow: Adw.ApplicationWindow{
           }
           Adw.ViewStackPage {
             name: "viewer";
-            child: $PdfViewer pdfviewer {
+            child:   Gtk.ScrolledWindow {
+              $PdfViewer pdfviewer {}
             };
           }
         }
