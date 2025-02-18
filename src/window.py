@@ -174,6 +174,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
             await self.latexfile.compile()
         except asyncio.CancelledError:
             print("Compilation canceled")
+            raise
         except LatexCompileError as err:
             toast = Adw.Toast(title=err.message, timeout=2)
             self.overlay.add_toast(toast)
