@@ -180,6 +180,8 @@ class TexwriterWindow(Adw.ApplicationWindow):
             self.overlay.add_toast(toast)
         except LatexFileError as err:
             print(err)
+        else:
+            self.pdfviewer.set_file(self.latexfile.path[:-3] + "pdf")
         finally:
             self.compile_button_stack.set_visible_child_name("compile")
 
