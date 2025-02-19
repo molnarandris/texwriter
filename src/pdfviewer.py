@@ -11,8 +11,9 @@ class PdfViewer(Gtk.Widget):
         super().__init__()
         self.document = None
         self.separator = 5
-        self._width = 0
-        self._height = 0
+        self._pdf_width = 0
+        self._pdf_height = 0
+        self._ratio = 1
 
     def set_file(self, file):
         document = pymupdf.open(file)
@@ -21,27 +22,41 @@ class PdfViewer(Gtk.Widget):
         for page in document.pages():
             height += page.rect.height + self.separator
             width = max(width, page.rect.width)
-        self.set_size_request(width, height)
         self.document = document
-        self._width = width
-        self._height = height
+        self._pdf_width = width
+        self._pdf_height = height
+        self._ratio = height/width
+
+    def do_get_request_mode(self):
+        return Gtk.SizeRequestMode.HEIGHT_FOR_WIDTH
+
+    def do_measure(self, orientation, for_size):
+        if orientation == Gtk.Orientation.HORIZONTAL:
+            minimum = 0
+            natural = int(for_size / self._ratio)
+        else:
+            minimum = int(for_size * self._ratio)
+            natural = int(for_size * self._ratio)
+        minimum_baseline = -1
+        natural_baseline = -1
+        return minimum, natural, minimum_baseline, natural_baseline
 
     def do_snapshot(self, snapshot):
         if self.document is None:
             return
-        y = 0
-        rect = Graphene.Rect().init(0, 0, self._width, self._height)
+        scale = self.get_width()/self._pdf_width
+        mx = pymupdf.Matrix(scale, scale)
 
-        print("shot")
+        y = 0
         for page in self.document.pages():
-            width = page.rect.width
-            height = page.rect.height
+            width = page.rect.width*scale
+            height = page.rect.height*scale
             rect = Graphene.Rect().init(0, y, width, height)
             y += height + self.separator
             color = Gdk.RGBA()
             color.parse("white")
             snapshot.append_color(color, rect)
-            pm = page.get_pixmap()
+            pm = page.get_pixmap(matrix=mx)
             RGB = GdkPixbuf.Colorspace.RGB
             pixbuf = GdkPixbuf.Pixbuf.new_from_data(pm.samples, RGB, pm.alpha, 8, pm.width, pm.height, pm.stride)
             texture = Gdk.Texture.new_for_pixbuf(pixbuf)
