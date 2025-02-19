@@ -26,6 +26,7 @@ class PdfViewer(Gtk.Widget):
         self._pdf_width = width
         self._pdf_height = height
         self._ratio = height/width
+        self.queue_draw()
 
     def do_get_request_mode(self):
         return Gtk.SizeRequestMode.HEIGHT_FOR_WIDTH
