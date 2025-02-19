@@ -178,6 +178,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
         except LatexCompileError as err:
             toast = Adw.Toast(title=err.message, timeout=2)
             self.overlay.add_toast(toast)
+            self.pdfviewer.set_file(None)
         except LatexFileError as err:
             print(err)
         else:

@@ -16,6 +16,12 @@ class PdfViewer(Gtk.Widget):
         self._ratio = 1
 
     def set_file(self, file):
+        if file is None:
+            self.document = None
+            self._ratio = 1
+            self.queue_resize()
+            self.queue_draw()
+            return
         document = pymupdf.open(file)
         height = 0
         width = 0
