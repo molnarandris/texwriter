@@ -23,20 +23,27 @@ import asyncio
 from gi.repository import GObject, Gio, GLib, Gtk
 
 
-LATEX_FILTER = Gio.ListStore.new(Gtk.FileFilter)
+class LatexFileDialog(Gtk.FileDialog):
+    def __init__(self):
+        super().__init__()
 
-f = Gtk.FileFilter()
-f.add_mime_type("text/x-tex")
-LATEX_FILTER.append(f)
+        latex_filter = Gio.ListStore.new(Gtk.FileFilter)
 
-f = Gtk.FileFilter()
-f.add_mime_type("text/plain")
-LATEX_FILTER.append(f)
+        f = Gtk.FileFilter()
+        f.add_mime_type("text/x-tex")
+        latex_filter.append(f)
 
-f = Gtk.FileFilter()
-f.add_pattern("*")
-f.set_name("All files")
-LATEX_FILTER.append(f)
+        f = Gtk.FileFilter()
+        f.add_mime_type("text/plain")
+        latex_filter.append(f)
+
+        f = Gtk.FileFilter()
+        f.add_pattern("*")
+        f.set_name("All files")
+        latex_filter.append(f)
+
+        self.set_filters(latex_filter)
+        self.set_modal(True)
 
 
 class LatexFileError(Exception):

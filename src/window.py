@@ -26,7 +26,7 @@ from gi.repository import Gio, GLib
 from gi.repository import GtkSource
 from gi.repository import GObject
 
-from .latexfile import LatexFile, LatexFileError, LatexCompileError, LATEX_FILTER
+from .latexfile import LatexFileDialog, LatexFile, LatexFileError, LatexCompileError
 from .pdfviewer import PdfViewer
 
 GtkSource.init()
@@ -93,9 +93,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
     async def open(self, file=None):
         if file is None:
-            dialog = Gtk.FileDialog()
-            dialog.set_filters(LATEX_FILTER)
-            dialog.set_modal(True)
+            dialog = LatexFileDialog()
 
             try:
                 file = await dialog.open(parent=self)
@@ -203,9 +201,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
     async def save(self, file):
         if file is None:
-            dialog = Gtk.FileDialog()
-            dialog.set_filters(LATEX_FILTER)
-            dialog.set_modal(True)
+            dialog = LatexFileDialog()
             try:
                 file = await dialog.save(parent=self)
             except GLib.Error as err:
