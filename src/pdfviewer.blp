@@ -1,5 +1,20 @@
 using Gtk 4.0;
+using Adw 1;
 
 template $PdfViewer: Gtk.Widget {
-
+    Adw.ViewStack stack {
+      Adw.ViewStackPage {
+        name: "empty";
+        child: Adw.StatusPage {
+          title: "No Pdf to display";
+          width-request: 400;
+        };
+      }
+      Adw.ViewStackPage {
+        name: "pdf";
+        child:   Gtk.ScrolledWindow {
+          $_PdfViewer viewer {}
+        };
+      }
+    }
 }

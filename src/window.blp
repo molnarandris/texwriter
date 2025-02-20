@@ -87,21 +87,7 @@ template $TexwriterWindow: Adw.ApplicationWindow{
           }
         }
 
-        Adw.ViewStack pdf_view_stack {
-          Adw.ViewStackPage {
-            name: "empty";
-            child: Adw.StatusPage {
-              title: "No Pdf to display";
-              width-request: 400;
-            };
-          }
-          Adw.ViewStackPage {
-            name: "viewer";
-            child:   Gtk.ScrolledWindow {
-              $PdfViewer pdfviewer {}
-            };
-          }
-        }
+        $PdfViewer pdfviewer {}
       }
     };
   }

@@ -1,11 +1,31 @@
 import gi
 import pymupdf
-from gi.repository import Gtk
+from gi.repository import Gtk, Adw
 from gi.repository import Graphene, Gdk, GdkPixbuf
 
 @Gtk.Template(resource_path='/io/github/molnarandris/TeXWriter/pdfviewer.ui')
 class PdfViewer(Gtk.Widget):
     __gtype_name__ = "PdfViewer"
+
+    stack = Gtk.Template.Child()
+    viewer = Gtk.Template.Child()
+
+    def __init__(self):
+        super().__init__()
+        layout = Gtk.BinLayout()
+        self.set_layout_manager(layout)
+
+    def set_file(self, file):
+        try:
+            self.viewer.set_file(file)
+        except pymupdf.FileNotFoundError:
+            self.stack.set_visible_child_name("empty")
+        else:
+            self.stack.set_visible_child_name("pdf")
+
+
+class _PdfViewer(Gtk.Widget):
+    __gtype_name__ = "_PdfViewer"
 
     def __init__(self):
         super().__init__()
@@ -16,13 +36,12 @@ class PdfViewer(Gtk.Widget):
         self._ratio = 1
 
     def set_file(self, file):
-        if file is None:
+        try:
+            document = pymupdf.open(file)
+        except pymupdf.FileNotFoundError:
             self.document = None
             self._ratio = 1
-            self.queue_resize()
-            self.queue_draw()
-            return
-        document = pymupdf.open(file)
+            raise
         height = 0
         width = 0
         for page in document.pages():
@@ -32,6 +51,7 @@ class PdfViewer(Gtk.Widget):
         self._pdf_width = width
         self._pdf_height = height
         self._ratio = height/width
+        self.queue_resize()
         self.queue_draw()
 
     def do_get_request_mode(self):
