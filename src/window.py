@@ -99,9 +99,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
                 file = await dialog.open(parent=self)
             except GLib.Error as err:
                 quark = Gtk.dialog_error_quark()
-                cancelled = err.matches(quark, Gtk.DialogError.DISMISSED) or \
-                            err.matches(quark, Gtk.DialogError.CANCELLED)
-                if not cancelled:
+                if err.matches(quark, Gtk.DialogError.FAILED):
                     msg = "Can't open file"
                     toast = Adw.Toast(title=msg, timeout=2)
                     self.overlay.add_toast(toast)
@@ -206,9 +204,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
                 file = await dialog.save(parent=self)
             except GLib.Error as err:
                 quark = Gtk.dialog_error_quark()
-                cancelled = err.matches(quark, Gtk.DialogError.DISMISSED) or \
-                            err.matches(quark, Gtk.DialogError.CANCELLED)
-                if not cancelled:
+                if err.matches(quark, Gtk.DialogError.FAILED):
                     msg = "Can't save to file"
                     toast = Adw.Toast(title=msg, timeout=2)
                     self.overlay.add_toast(toast)
