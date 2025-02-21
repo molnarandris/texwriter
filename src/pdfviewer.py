@@ -22,6 +22,9 @@ class PdfViewer(Gtk.Widget):
             self.stack.set_visible_child_name("empty")
         else:
             self.stack.set_visible_child_name("pdf")
+        if file is None:
+            self.stack.set_visible_child_name("empty")
+            return
 
 
 class _PdfViewer(Gtk.Widget):
@@ -36,11 +39,19 @@ class _PdfViewer(Gtk.Widget):
         self._ratio = 1
 
     def set_file(self, file):
+        if file is None:
+            document = None
+            self._ratio = 1
+            self.queue_resize()
+            self.queue_draw()
+            return
         try:
             document = pymupdf.open(file)
         except pymupdf.FileNotFoundError:
             self.document = None
             self._ratio = 1
+            self.queue_resize()
+            self.queue_draw()
             raise
         height = 0
         width = 0
@@ -50,6 +61,7 @@ class _PdfViewer(Gtk.Widget):
         self.document = document
         self._pdf_width = width
         self._pdf_height = height
+        assert width != 0
         self._ratio = height/width
         self.queue_resize()
         self.queue_draw()

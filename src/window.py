@@ -154,7 +154,12 @@ class TexwriterWindow(Adw.ApplicationWindow):
     async def compile(self, old_task=None):
         if old_task is not None:
             old_task.cancel()
-            await old_task
+            print("Canceling old task", old_task, self._compile_task)
+            try:
+                await old_task
+            except BaseException as err:
+                print(err)
+            print("Old task cancelled")
         self.compile_button_stack.set_visible_child_name("cancel")
 
         if not self.latexfile.exists:
@@ -173,8 +178,10 @@ class TexwriterWindow(Adw.ApplicationWindow):
             toast = Adw.Toast(title=err.message, timeout=2)
             self.overlay.add_toast(toast)
             self.pdfviewer.set_file(None)
+            self._compile_task = None
         except LatexFileError as err:
             print(err)
+            self._compile_task = None
         else:
             self.pdfviewer.set_file(self.latexfile.path[:-3] + "pdf")
         finally:
