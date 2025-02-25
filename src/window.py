@@ -150,7 +150,6 @@ class TexwriterWindow(Adw.ApplicationWindow):
         else:
             old_task = None
         self._compile_task = asyncio.create_task(self.compile(old_task))
-        self._compile_task.add_done_callback(self.print_asyncio_error)
 
     async def compile(self, old_task=None):
         if old_task is not None:
@@ -185,6 +184,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
             self._compile_task = None
         else:
             self.pdfviewer.set_file(self.latexfile.path[:-3] + "pdf")
+            self._compile_task = None
         finally:
             self.compile_button_stack.set_visible_child_name("compile")
 
@@ -241,6 +241,3 @@ class TexwriterWindow(Adw.ApplicationWindow):
         except LatexFileError:
             self.subtitle.set_label("Unsaved")
 
-    def print_asyncio_error(self, task):
-        if task.exception() is not None:
-            raise task.exception()
