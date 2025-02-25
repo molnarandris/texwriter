@@ -19,6 +19,7 @@
 
 import gi
 import asyncio
+import re
 
 from gi.repository import GObject, Gio, GLib, Gtk
 
@@ -154,7 +155,9 @@ class LatexFile(GObject.Object):
         stdout, stderr = await process.communicate()
 
         if stdout:
-            #print(f"Output:\n{stdout.decode()}")
+            log_text = stdout.decode()
+            print(log_text, "\n---------------------------------------------\n")
+            self.parse_latex_log(log_text)
             pass
 
         if process.returncode == 0:
@@ -177,4 +180,20 @@ class LatexFile(GObject.Object):
             raise LatexFileError(f"Permission denied: {self.path}")
         finally:
             self._monitor.handler_unblock_by_func(self.on_file_change)
+
+    def parse_latex_log(self, log_text):
+
+        error_pattern = re.compile(r"! (.+?)\nl\.(\d+) (.+?)\n")
+        warning_pattern = re.compile(r"(LaTeX Warning: .+?)\n")
+
+        errors = error_pattern.findall(log_text)
+        warnings = warning_pattern.findall(log_text)
+
+        for error in errors:
+            print("ERROR: ", error)
+
+        for warning in warnings:
+            print("WARNING: ", warning)
+
+        return errors, warnings
 
