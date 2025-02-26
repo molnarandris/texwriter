@@ -45,6 +45,10 @@ template $TexwriterWindow: Adw.ApplicationWindow{
           };
         }
       }
+      [end]
+      StackSwitcher view_switcher {
+        stack: result_stack;
+      }
 
       title-widget: Gtk.Box {
         orientation: vertical;
@@ -87,13 +91,15 @@ template $TexwriterWindow: Adw.ApplicationWindow{
           }
         }
 
-        Adw.ViewStack result_stack {
-          Adw.ViewStackPage {
+        Stack result_stack {
+          StackPage {
             name: "pdf";
+            title: "Pdf";
             child: $PdfViewer pdfviewer {};
           }
-          Adw.ViewStackPage {
+          StackPage {
             name: "log";
+            title: "Log";
             child: $LogViewer logviewer {};
           }
         }
