@@ -90,6 +90,15 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.latexfile.bind_property("display-name", self.title, "label",
                                      GObject.BindingFlags.SYNC_CREATE)
 
+        keybuffer = GtkSource.Buffer()
+        keybuffer.set_text("\\alpha \\beta \\gamma")
+        provider = GtkSource.CompletionWords.new("main")
+        provider.register(keybuffer)
+        provider.props.minimum_word_size = 2
+        completion = self.text_view.get_completion()
+        completion.props.select_on_show = True
+        completion.add_provider(provider)
+
     def on_open(self, action, _):
         self.open_task = asyncio.create_task(self.open())
 
