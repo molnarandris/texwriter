@@ -1,0 +1,6 @@
+stackswitcher > button {
+    min-height: 22px;
+    min-width: 20px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
