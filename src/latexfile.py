@@ -185,7 +185,7 @@ class LatexFile(GObject.Object):
     def parse_latex_log(self, log_text):
 
         error_pattern = re.compile(r"! (.+?)\nl\.(\d+) (.+?)\n")
-        warning_pattern = re.compile(r"LaTeX Warning: (.+?)\n")
+        warning_pattern = re.compile(r"LaTeX Warning: (.*?)(?:on input line (\d+))?\.\n")
 
         self.errors = []
         for error in error_pattern.findall(log_text):
@@ -200,7 +200,9 @@ class LatexFile(GObject.Object):
         for warning in warning_pattern.findall(log_text):
             e = LatexLogRow()
             e.type = "Warning"
-            e.title = warning
+            e.title = warning[0]
+            if warning[1]:
+                e.row = int(warning[1])
             self.errors.append(e)
             print("WARNING: ", warning)
 
