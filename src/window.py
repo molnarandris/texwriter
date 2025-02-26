@@ -28,6 +28,7 @@ from gi.repository import GObject
 
 from .latexfile import LatexFileDialog, LatexFile, LatexFileError, LatexCompileError
 from .pdfviewer import PdfViewer
+from .logviewer import LogViewer
 
 GtkSource.init()
 
@@ -44,6 +45,8 @@ class TexwriterWindow(Adw.ApplicationWindow):
     subtitle = Gtk.Template.Child()
     paned = Gtk.Template.Child()
     pdfviewer = Gtk.Template.Child()
+    logviewer = Gtk.Template.Child()
+    result_stack = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -179,6 +182,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
             self.overlay.add_toast(toast)
             self.pdfviewer.set_file(None)
             self._compile_task = None
+            self.result_stack.set_visible_child_name("log")
         except LatexFileError as err:
             print(err)
             self._compile_task = None
@@ -186,6 +190,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
             self.pdfviewer.set_file(self.latexfile.path[:-3] + "pdf")
             self._compile_task = None
         finally:
+            self.logviewer.set_content(self.latexfile.errors + self.latexfile.warnings)
             self.compile_button_stack.set_visible_child_name("compile")
 
     def on_compile_cancel_action(self, action, _):

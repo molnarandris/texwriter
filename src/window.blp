@@ -87,7 +87,16 @@ template $TexwriterWindow: Adw.ApplicationWindow{
           }
         }
 
-        $PdfViewer pdfviewer {}
+        Adw.ViewStack result_stack {
+          Adw.ViewStackPage {
+            name: "pdf";
+            child: $PdfViewer pdfviewer {};
+          }
+          Adw.ViewStackPage {
+            name: "log";
+            child: $LogViewer logviewer {};
+          }
+        }
       }
     };
   }

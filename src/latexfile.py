@@ -68,6 +68,8 @@ class LatexFile(GObject.Object):
         self._file = None
         self._monitor = None
         self._display_name = 'Unsaved File'
+        self.errors = [] #TODO: move to LatexProject
+        self.warnings = []
 
     @property
     def exists(self):
@@ -156,7 +158,6 @@ class LatexFile(GObject.Object):
 
         if stdout:
             log_text = stdout.decode()
-            print(log_text, "\n---------------------------------------------\n")
             self.parse_latex_log(log_text)
             pass
 
@@ -184,16 +185,28 @@ class LatexFile(GObject.Object):
     def parse_latex_log(self, log_text):
 
         error_pattern = re.compile(r"! (.+?)\nl\.(\d+) (.+?)\n")
-        warning_pattern = re.compile(r"(LaTeX Warning: .+?)\n")
+        warning_pattern = re.compile(r"LaTeX Warning: (.+?)\n")
 
-        errors = error_pattern.findall(log_text)
-        warnings = warning_pattern.findall(log_text)
-
-        for error in errors:
+        self.errors = []
+        for error in error_pattern.findall(log_text):
+            e = LatexLogRow()
+            e.type = "Error"
+            e.row = error[1]
+            e.title = error[0] + ": " + error[2]
+            self.errors.append(e)
             print("ERROR: ", error)
 
-        for warning in warnings:
+        self.warnings = []
+        for warning in warning_pattern.findall(log_text):
+            e = LatexLogRow()
+            e.type = "Warning"
+            e.title = warning
+            self.errors.append(e)
             print("WARNING: ", warning)
 
-        return errors, warnings
 
+class LatexLogRow:
+    def __init__(self):
+        self.type = ""
+        self.row = 0
+        self.title = ""
