@@ -159,7 +159,6 @@ class LatexFile(GObject.Object):
         if stdout:
             log_text = stdout.decode()
             self.parse_latex_log(log_text)
-            pass
 
         if process.returncode == 0:
             print("Compile succeeded")
@@ -191,10 +190,10 @@ class LatexFile(GObject.Object):
         for error in error_pattern.findall(log_text):
             e = LatexLogRow()
             e.type = "Error"
-            e.row = error[1]
+            e.line = int(error[1])
             e.title = error[0] + ": " + error[2]
+            e.text_before = error[2]
             self.errors.append(e)
-            print("ERROR: ", error)
 
         self.warnings = []
         for warning in warning_pattern.findall(log_text):
@@ -202,13 +201,14 @@ class LatexFile(GObject.Object):
             e.type = "Warning"
             e.title = warning[0]
             if warning[1]:
-                e.row = int(warning[1])
+                e.line = int(warning[1])
             self.errors.append(e)
-            print("WARNING: ", warning)
 
 
 class LatexLogRow:
     def __init__(self):
         self.type = ""
-        self.row = 0
+        self.line = 0
         self.title = ""
+        self.text_before = ""
+        self.text_after = ""

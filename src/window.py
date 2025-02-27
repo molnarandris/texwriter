@@ -81,7 +81,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self._compile_task = None
 
         self.latexfile.connect("modified", self.on_file_modified)
-
+        self.logviewer.connect("scroll-to", self.scroll_to)
         self.banner.connect("button-clicked", self.on_banner_button_clicked)
 
         self.paned.set_resize_start_child(True)
@@ -254,4 +254,23 @@ class TexwriterWindow(Adw.ApplicationWindow):
             self.subtitle.set_label(self.latexfile.pwd_path)
         except LatexFileError:
             self.subtitle.set_label("Unsaved")
+
+    def scroll_to(self, _, line, text_before, text_after):
+        buffer = self.text_view.props.buffer
+        _, it = buffer.get_iter_at_line(line-1)
+        bound = it.copy()
+        bound.forward_to_line_end()
+        print(line, text_before, " after: ", text_after)
+
+        if line == 0:
+            return
+
+        match_start, match_end = it.forward_search(text_before, Gtk.TextSearchFlags.TEXT_ONLY, bound)
+
+        #buffer.apply_tag_by_name('highlight', *result)
+        #GLib.timeout_add(500, lambda: buffer.remove_tag_by_name('highlight',*result))
+        #it = result[0]
+        self.text_view.scroll_to_iter(match_end, 0.3, False, 0, 0)
+        buffer.place_cursor(match_end)
+        self.text_view.grab_focus()
 
