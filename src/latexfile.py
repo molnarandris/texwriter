@@ -47,6 +47,11 @@ class LatexFileDialog(Gtk.FileDialog):
         self.set_modal(True)
 
 
+class InterpreterMissingError(Exception):
+    def __init__(self, interpreter):
+        self.interpreter = interpreter
+
+
 class LatexFileError(Exception):
     def __init__(self, message):
         self.message = message
@@ -156,19 +161,18 @@ class LatexFile(GObject.Object):
 
         stdout, stderr = await process.communicate()
 
-        if stdout:
-            log_text = stdout.decode()
-            self.parse_latex_log(log_text)
+        log_text = stdout.decode()
+        self.parse_latex_log(log_text)
+        success = True
 
-        if process.returncode == 0:
-            print("Compile succeeded")
-        else:
-            msg = f"Compilation of {self.display_name} failed"
-            if stderr:
-                err_msg = stderr.decode()
-                if err_msg.startswith("Portal call failed:"):
-                    msg = msg + f": {interpreter} is not installed"
-            raise LatexCompileError(msg)
+        if process.returncode != 0:
+            success = False
+            err_msg = stderr.decode()
+            print(err_msg)
+            if err_msg.startswith("Portal call failed:"):
+                raise InterpreterMissingError(interpreter)
+
+        return success, log_text
 
     async def replace_contents(self, text):
         self._monitor.handler_block_by_func(self.on_file_change)

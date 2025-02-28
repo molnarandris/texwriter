@@ -26,7 +26,7 @@ from gi.repository import Gio, GLib
 from gi.repository import GtkSource
 from gi.repository import GObject
 
-from .latexfile import LatexFileDialog, LatexFile, LatexFileError, LatexCompileError
+from .latexfile import LatexFileDialog, LatexFile, LatexFileError, LatexCompileError, InterpreterMissingError
 from .pdfviewer import PdfViewer
 from .logviewer import LogViewer
 
@@ -182,22 +182,28 @@ class TexwriterWindow(Adw.ApplicationWindow):
             await self.save(self.latexfile.file)
 
         try:
-            await self.latexfile.compile()
+            success, log_text = await self.latexfile.compile()
         except asyncio.CancelledError:
-            print("Compilation canceled")
             raise
-        except LatexCompileError as err:
-            toast = Adw.Toast(title=err.message, timeout=2)
+        except InterpreterMissingError as err:
+            msg = f"Compilation failed: {interpreter} is missing"
+            toast = Adw.Toast(title=msg, timeout=2)
             self.overlay.add_toast(toast)
-            self.pdfviewer.set_file(None)
             self._compile_task = None
-            self.result_stack.set_visible_child_name("log")
         except LatexFileError as err:
-            print(err)
+            print("Error at compilation:", err)
             self._compile_task = None
         else:
-            self.pdfviewer.set_file(self.latexfile.path[:-3] + "pdf")
             self._compile_task = None
+            if success:
+                self.pdfviewer.set_file(self.latexfile.path[:-3] + "pdf")
+                self.result_stack.set_visible_child_name("pdf")
+            else:
+                msg = "Compilation failed"
+                toast = Adw.Toast(title=msg, timeout=2)
+                self.overlay.add_toast(toast)
+                self.pdfviewer.set_file(None)
+                self.result_stack.set_visible_child_name("log")
         finally:
             self.logviewer.set_content(self.latexfile.errors + self.latexfile.warnings)
             self.compile_button_stack.set_visible_child_name("compile")
