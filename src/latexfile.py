@@ -162,13 +162,11 @@ class LatexFile(GObject.Object):
         stdout, stderr = await process.communicate()
 
         log_text = stdout.decode()
-        self.parse_latex_log(log_text)
         success = True
 
         if process.returncode != 0:
             success = False
             err_msg = stderr.decode()
-            print(err_msg)
             if err_msg.startswith("Portal call failed:"):
                 raise InterpreterMissingError(interpreter)
 
@@ -185,34 +183,3 @@ class LatexFile(GObject.Object):
         finally:
             self._monitor.handler_unblock_by_func(self.on_file_change)
 
-    def parse_latex_log(self, log_text):
-
-        error_pattern = re.compile(r"! (.+?)\nl\.(\d+) (.+?)\n")
-        warning_pattern = re.compile(r"LaTeX Warning: (.*?)(?:on input line (\d+))?\.\n")
-
-        self.errors = []
-        for error in error_pattern.findall(log_text):
-            e = LatexLogRow()
-            e.type = "Error"
-            e.line = int(error[1])
-            e.title = error[0] + ": " + error[2]
-            e.text_before = error[2]
-            self.errors.append(e)
-
-        self.warnings = []
-        for warning in warning_pattern.findall(log_text):
-            e = LatexLogRow()
-            e.type = "Warning"
-            e.title = warning[0]
-            if warning[1]:
-                e.line = int(warning[1])
-            self.errors.append(e)
-
-
-class LatexLogRow:
-    def __init__(self):
-        self.type = ""
-        self.line = 0
-        self.title = ""
-        self.text_before = ""
-        self.text_after = ""

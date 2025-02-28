@@ -205,7 +205,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
                 self.pdfviewer.set_file(None)
                 self.result_stack.set_visible_child_name("log")
         finally:
-            self.logviewer.set_content(self.latexfile.errors + self.latexfile.warnings)
+            self.logviewer.set_content(log_text)
             self.compile_button_stack.set_visible_child_name("compile")
 
     def on_compile_cancel_action(self, action, _):
@@ -266,7 +266,6 @@ class TexwriterWindow(Adw.ApplicationWindow):
         _, it = buffer.get_iter_at_line(line-1)
         bound = it.copy()
         bound.forward_to_line_end()
-        print(line, text_before, " after: ", text_after)
 
         if line == 0:
             return
