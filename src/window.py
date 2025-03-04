@@ -79,6 +79,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
         self.latexfile = LatexFile()
         self._compile_task = None
+        self._old_compile_task = None
 
         self.latexfile.connect("modified", self.on_file_modified)
         self.logviewer.connect("scroll-to", self.scroll_to)
@@ -157,21 +158,18 @@ class TexwriterWindow(Adw.ApplicationWindow):
         asyncio.create_task(self.open(self.latexfile.file))
 
     def on_compile_action(self, action, _):
-        if self._compile_task is not None:
-            old_task = self._compile_task
-        else:
-            old_task = None
-        self._compile_task = asyncio.create_task(self.compile(old_task))
+        if self._compile_task and not self._compile_task.done():
+            self._old_compile_task = self._compile_task
 
-    async def compile(self, old_task=None):
-        if old_task is not None:
-            old_task.cancel()
-            print("Canceling old task", old_task, self._compile_task)
+        self._compile_task = asyncio.create_task(self.compile())
+
+    async def compile(self, old_task = None):
+        if self._old_compile_task and not self._old_compile_task.done():
+            self._old_compile_task.cancel()
             try:
-                await old_task
-            except BaseException as err:
-                print(err)
-            print("Old task cancelled")
+                await self._old_compile_task
+            except asyncio.CancelledError:
+                pass
         self.compile_button_stack.set_visible_child_name("cancel")
 
         if not self.latexfile.exists:
@@ -183,18 +181,14 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
         try:
             success, log_text = await self.latexfile.compile()
-        except asyncio.CancelledError:
-            raise
         except InterpreterMissingError as err:
             msg = f"Compilation failed: {interpreter} is missing"
             toast = Adw.Toast(title=msg, timeout=2)
             self.overlay.add_toast(toast)
-            self._compile_task = None
         except LatexFileError as err:
             print("Error at compilation:", err)
-            self._compile_task = None
         else:
-            self._compile_task = None
+            self.logviewer.set_content(log_text)
             if success:
                 self.pdfviewer.set_file(self.latexfile.path[:-3] + "pdf")
                 self.result_stack.set_visible_child_name("pdf")
@@ -205,13 +199,14 @@ class TexwriterWindow(Adw.ApplicationWindow):
                 self.pdfviewer.set_file(None)
                 self.result_stack.set_visible_child_name("log")
         finally:
-            self.logviewer.set_content(log_text)
-            self.compile_button_stack.set_visible_child_name("compile")
+            # If there is still a compilation running, don't reset state
+            if self._compile_task is asyncio.current_task():
+                self.compile_button_stack.set_visible_child_name("compile")
+                self._compile_task = None
 
     def on_compile_cancel_action(self, action, _):
-        if self._compile_task is not None:
+        if self._compile_task and not self._compile_task.done():
             self._compile_task.cancel()
-        self._compile_task = None
 
     def on_save_action(self, action, _):
         try:

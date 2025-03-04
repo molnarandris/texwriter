@@ -158,8 +158,11 @@ class LatexFile(GObject.Object):
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
-
-        stdout, stderr = await process.communicate()
+        try:
+            stdout, stderr = await process.communicate()
+        except asyncio.CancelledError:
+            process.terminate()
+            raise
 
         log_text = stdout.decode()
         success = True
