@@ -17,7 +17,7 @@
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 import gi
-import asyncio
+import asyncio, re
 gi.require_version("GtkSource", "5")
 
 from gi.repository import Adw
@@ -69,6 +69,10 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
         action = Gio.SimpleAction(name="save-as")
         action.connect("activate", self.on_save_as_action)
+        self.add_action(action)
+
+        action = Gio.SimpleAction(name="synctex")
+        action.connect("activate", self.on_synctex_action)
         self.add_action(action)
 
         buffer = self.text_view.get_buffer()
@@ -274,3 +278,39 @@ class TexwriterWindow(Adw.ApplicationWindow):
         buffer.place_cursor(match_end)
         self.text_view.grab_focus()
 
+    def on_synctex_action(self, action, _):
+        asyncio.create_task(self.synctex_fwd())
+
+    async def synctex_fwd(self):
+        buffer = self.text_view.get_buffer()
+        it = buffer.get_iter_at_mark(buffer.get_insert())
+        line = it.get_line()
+        column = it.get_line_offset()
+        tex_path = self.latexfile.path
+        pos = str(line) + ":" + str(column) + ":" + tex_path
+        pdf_path = self.latexfile.path[:-3] + "pdf"
+        cmd = ['flatpak-spawn', '--host', 'synctex',
+               'view', '-i', pos, '-o', pdf_path]
+
+        process = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        try:
+            stdout, stderr = await process.communicate()
+        except asyncio.CancelledError:
+            process.terminate()
+            raise
+        else:
+            record = "Page:(.*)\n.*\n.*\nh:(.*)\nv:(.*)\nW:(.*)\nH:(.*)"
+            rectangles = []
+            for match in re.findall(record, stdout.decode()):
+                page = int(match[0])-1
+                x = float(match[1])
+                y = float(match[2])
+                width = float(match[3])
+                height = float(match[4])
+                rectangles.append((width, height, x, y, page))
+            for r in rectangles:
+                print(r)

@@ -51,6 +51,7 @@ class TexwriterApplication(Adw.Application):
         self.set_accels_for_action('app.quit', ['<primary>q'])
         self.set_accels_for_action('win.open', ['<Ctrl>o'])
         self.set_accels_for_action('win.compile', ['F5'])
+        self.set_accels_for_action('win.synctex', ['F7'])
         self.set_accels_for_action('win.save', ['<Ctrl>s'])
         self.set_accels_for_action('win.save-as', ['<Ctrl><Shift>s'])
 
