@@ -312,5 +312,4 @@ class TexwriterWindow(Adw.ApplicationWindow):
                 width = float(match[3])
                 height = float(match[4])
                 rectangles.append((width, height, x, y, page))
-            for r in rectangles:
-                print(r)
+            self.pdfviewer.synctex_fwd(rectangles)
