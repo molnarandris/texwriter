@@ -207,6 +207,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
             if self._compile_task is asyncio.current_task():
                 self.compile_button_stack.set_visible_child_name("compile")
                 self._compile_task = None
+                await self.synctex_fwd()
 
     def on_compile_cancel_action(self, action, _):
         if self._compile_task and not self._compile_task.done():
