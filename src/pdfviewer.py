@@ -42,7 +42,7 @@ class PdfViewer(Gtk.Widget):
                 self.box.remove(overlay)
                 page = overlay.get_child()
                 page.unparent()
-                page.disconnect(self.on_synctex_back)
+                page.disconnect_by_func(self.on_synctex_back)
                 overlay.set_child(None)
                 overlay = self.box.get_first_child()
             for pg in document.pages():
