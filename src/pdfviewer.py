@@ -1,11 +1,16 @@
 import gi
 import pymupdf
+import asyncio
+import re
 from gi.repository import Gtk, Adw
-from gi.repository import Graphene, Gdk, GdkPixbuf, GLib
+from gi.repository import Graphene, Gdk, GdkPixbuf, GLib, GObject
 
 @Gtk.Template(resource_path='/io/github/molnarandris/TeXWriter/pdfviewer.ui')
 class PdfViewer(Gtk.Widget):
     __gtype_name__ = "PdfViewer"
+    __gsignals__ = {
+        'synctex-back': (GObject.SIGNAL_RUN_FIRST, None, (int,)),
+    }
 
     stack = Gtk.Template.Child()
     box = Gtk.Template.Child()
@@ -18,26 +23,33 @@ class PdfViewer(Gtk.Widget):
         self.scale = 1
         self.box.set_spacing(5)
         self.box.set_orientation(Gtk.Orientation.VERTICAL)
+        self.file_path = ""
 
     def set_file(self, file):
         if file is None:
             self.stack.set_visible_child_name("empty")
+            self.file_path = ""
         try:
             document = pymupdf.open(file)
         except pymupdf.FileNotFoundError:
             self.stack.set_visible_child_name("empty")
+            self.file_path = ""
         else:
+            self.file_path = file
             self.stack.set_visible_child_name("pdf")
             overlay = self.box.get_first_child()
             while overlay is not None:
                 self.box.remove(overlay)
-                pg = overlay.get_child()
-                pg.unparent()
+                page = overlay.get_child()
+                page.unparent()
+                page.disconnect(self.on_synctex_back)
                 overlay.set_child(None)
                 overlay = self.box.get_first_child()
             for pg in document.pages():
+                page = PdfPage(pg)
+                page.connect("synctex-back", self.on_synctex_back)
                 overlay = Gtk.Overlay()
-                overlay.set_child(PdfPage(pg))
+                overlay.set_child(page)
                 self.box.append(overlay)
 
     def get_page(self, n):
@@ -74,16 +86,61 @@ class PdfViewer(Gtk.Widget):
         page = overlay.get_child()
         self.scroll_to(p, (y-h)*page.scale)
 
+    def on_synctex_back(self, page, x, y):
+        self._synctex_back_task = asyncio.create_task(self.synctex_back(page, x, y))
+
+    async def synctex_back(self, page, x, y):
+        if self.file_path is None:
+            return
+        arg = str(page.number+1) + ":" + str(x) + ":" + str(y)
+        arg += ":" + self.file_path
+        cmd = ['flatpak-spawn', '--host', 'synctex', 'edit', '-o', arg]
+        process = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        try:
+            stdout, stderr = await process.communicate()
+        except asyncio.CancelledError:
+            process.terminate()
+            raise
+        except err:
+            print(err)
+        result = re.search("Line:(.*)", stdout.decode())
+        line = int(result.group(1)) - 1
+        self.emit("synctex-back", line)
+
+
 class PdfPage(Gtk.Widget):
+    __gtype_name__ = "PdfPage"
+    __gsignals__ = {
+        'synctex-back': (GObject.SIGNAL_RUN_FIRST, None, (float, float)),
+    }
+
     def __init__(self, page):
         super().__init__()
         self.page = page
         self.texture = None
         self._ratio = page.rect.height/page.rect.width
+        controller = Gtk.GestureClick()
+        controller.set_propagation_phase(Gtk.PropagationPhase.BUBBLE)
+        controller.connect("released", self.on_click)
+        self.add_controller(controller)
+        self.number = self.page.number
 
     @property
     def scale(self):
         return self.get_width()/self.page.rect.width
+
+    def on_click(self, controller, n_press, x, y):
+        if n_press != 2:
+            return
+        x = x/self.scale
+        y = y/self.scale
+
+        self.emit("synctex-back", x, y)
+
 
     def render(self, scale):
         mx = pymupdf.Matrix(scale, scale)

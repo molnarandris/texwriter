@@ -104,6 +104,15 @@ class TexwriterWindow(Adw.ApplicationWindow):
         completion.props.select_on_show = True
         completion.add_provider(provider)
 
+        self.pdfviewer.connect("synctex-back", self.on_synctex_back)
+
+    def on_synctex_back(self, pdfviewer, line):
+        buffer = self.text_view.props.buffer
+        _, it = buffer.get_iter_at_line(line)
+        self.text_view.scroll_to_iter(it, 0.3, False, 0, 0)
+        buffer.place_cursor(it)
+        self.text_view.grab_focus()
+
     def on_open(self, action, _):
         self.open_task = asyncio.create_task(self.open())
 
