@@ -29,6 +29,7 @@ from gi.repository import GObject
 from .latexfile import LatexFileDialog, LatexFile, LatexFileError, LatexCompileError, InterpreterMissingError
 from .pdfviewer import PdfViewer
 from .logviewer import LogViewer
+from .utils import run_command
 
 GtkSource.init()
 
@@ -299,27 +300,17 @@ class TexwriterWindow(Adw.ApplicationWindow):
         tex_path = self.latexfile.path
         pos = str(line) + ":" + str(column) + ":" + tex_path
         pdf_path = self.latexfile.path[:-3] + "pdf"
-        cmd = ['flatpak-spawn', '--host', 'synctex',
-               'view', '-i', pos, '-o', pdf_path]
+        cmd = ['synctex', 'view', '-i', pos, '-o', pdf_path]
 
-        process = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-        try:
-            stdout, stderr = await process.communicate()
-        except asyncio.CancelledError:
-            process.terminate()
-            raise
-        else:
-            record = "Page:(.*)\n.*\n.*\nh:(.*)\nv:(.*)\nW:(.*)\nH:(.*)"
-            rectangles = []
-            for match in re.findall(record, stdout.decode()):
-                page = int(match[0])-1
-                x = float(match[1])
-                y = float(match[2])
-                width = float(match[3])
-                height = float(match[4])
-                rectangles.append((width, height, x, y, page))
-            self.pdfviewer.synctex_fwd(rectangles)
+        success, output = await run_command(cmd)
+
+        record = "Page:(.*)\n.*\n.*\nh:(.*)\nv:(.*)\nW:(.*)\nH:(.*)"
+        rectangles = []
+        for match in re.findall(record, output):
+            page = int(match[0])-1
+            x = float(match[1])
+            y = float(match[2])
+            width = float(match[3])
+            height = float(match[4])
+            rectangles.append((width, height, x, y, page))
+        self.pdfviewer.synctex_fwd(rectangles)

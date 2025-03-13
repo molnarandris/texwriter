@@ -20,6 +20,7 @@
 import gi
 import asyncio
 import re
+from .utils import run_command
 
 from gi.repository import GObject, Gio, GLib, Gtk
 
@@ -148,31 +149,10 @@ class LatexFile(GObject.Object):
     async def compile(self):
         """Run LaTeX asynchronously on self.file."""
         interpreter = 'latexmk'
-        cmd = ['flatpak-spawn', '--host', interpreter, '-synctex=1',
-               '-interaction=nonstopmode', '-pdf', "-g",
-               "--output-directory=" + self.pwd_path,
-               self.path]
+        cmd = [interpreter, '-synctex=1', '-interaction=nonstopmode', '-pdf',
+               "-g", "--output-directory=" + self.pwd_path, self.path]
 
-        process = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-        try:
-            stdout, stderr = await process.communicate()
-        except asyncio.CancelledError:
-            process.terminate()
-            raise
-
-        log_text = stdout.decode()
-        success = True
-
-        if process.returncode != 0:
-            success = False
-            err_msg = stderr.decode()
-            if err_msg.startswith("Portal call failed:"):
-                raise InterpreterMissingError(interpreter)
-
+        success, log_text = await run_command(cmd)
         return success, log_text
 
     async def replace_contents(self, text):

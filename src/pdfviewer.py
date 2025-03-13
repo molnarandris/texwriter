@@ -4,6 +4,7 @@ import asyncio
 import re
 from gi.repository import Gtk, Adw
 from gi.repository import Graphene, Gdk, GdkPixbuf, GLib, GObject
+from .utils import run_command
 
 @Gtk.Template(resource_path='/io/github/molnarandris/TeXWriter/pdfviewer.ui')
 class PdfViewer(Gtk.Widget):
@@ -94,20 +95,9 @@ class PdfViewer(Gtk.Widget):
             return
         arg = str(page.number+1) + ":" + str(x) + ":" + str(y)
         arg += ":" + self.file_path
-        cmd = ['flatpak-spawn', '--host', 'synctex', 'edit', '-o', arg]
-        process = await asyncio.create_subprocess_exec(
-            *cmd,
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
-        )
-        try:
-            stdout, stderr = await process.communicate()
-        except asyncio.CancelledError:
-            process.terminate()
-            raise
-        except err:
-            print(err)
-        result = re.search("Line:(.*)", stdout.decode())
+        cmd = ['synctex', 'edit', '-o', arg]
+        success, output = await run_command(cmd)
+        result = re.search("Line:(.*)", output)
         line = int(result.group(1)) - 1
         self.emit("synctex-back", line)
 
