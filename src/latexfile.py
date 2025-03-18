@@ -128,10 +128,14 @@ class LatexFile(GObject.Object):
             return
         self.emit("modified")
 
-    async def load_contents_async(self):
+    def load_contents_async(self, callback=None):
+        cb = lambda file, result: callback(self, result)
+        self.file.load_contents_async(callback = cb)
+
+    def load_contents_finish(self, result):
         path = self.file.peek_path()
         try:
-            contents = await self.file.load_contents_async()
+            contents = self.file.load_contents_finish(result)
         except GLib.Error:
             raise LatexFileError(f"Can't open {path}: file loading error")
 

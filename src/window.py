@@ -53,7 +53,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
         super().__init__(**kwargs)
 
         action = Gio.SimpleAction(name="open")
-        action.connect("activate", self.on_open)
+        action.connect("activate", lambda *_: self.open())
         self.add_action(action)
 
         action = Gio.SimpleAction(name="compile")
@@ -117,26 +117,31 @@ class TexwriterWindow(Adw.ApplicationWindow):
     def on_open(self, action, _):
         self.open_task = asyncio.create_task(self.open())
 
-    async def open(self, file=None):
+    def open(self, file=None):
         if file is None:
             dialog = LatexFileDialog()
+            dialog.open(parent=self, callback=self.open_cb1)
 
-            try:
-                file = await dialog.open(parent=self)
-            except GLib.Error as err:
-                quark = Gtk.dialog_error_quark()
-                if err.matches(quark, Gtk.DialogError.FAILED):
-                    msg = "Can't open file"
-                    toast = Adw.Toast(title=msg, timeout=2)
-                    self.overlay.add_toast(toast)
-                return
+    def open_cb1(self, dialog, result):
+        try:
+            file = dialog.open_finish(result)
+        except GLib.Error as err:
+            quark = Gtk.dialog_error_quark()
+            if err.matches(quark, Gtk.DialogError.FAILED):
+                msg = "Can't open file"
+                toast = Adw.Toast(title=msg, timeout=2)
+                self.overlay.add_toast(toast)
+            return
 
         assert file is not None #I think dialog returns either error or file
 
         self.latexfile.file = file
 
+        self.latexfile.load_contents_async(self.open_cb2)
+
+    def open_cb2(self, latexfile, result):
         try:
-            text = await self.latexfile.load_contents_async()
+            text = latexfile.load_contents_finish(result)
         except LatexFileError as err:
             # Loader loads content even if there is an error...
             toast = Adw.Toast(title=err.message, timeout=2)
