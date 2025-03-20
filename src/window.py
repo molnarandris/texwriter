@@ -88,7 +88,6 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
         self.latexfile.connect("modified", self.on_file_modified)
         self.logviewer.connect("scroll-to", self.scroll_to)
-        self.banner.connect("button-clicked", self.on_banner_button_clicked)
 
         self.paned.set_resize_start_child(True)
         self.paned.set_resize_end_child(True)
@@ -105,8 +104,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
         completion.props.select_on_show = True
         completion.add_provider(provider)
 
-        self.pdfviewer.connect("synctex-back", self.on_synctex_back)
-
+    @Gtk.Template.Callback()
     def on_synctex_back(self, pdfviewer, line):
         buffer = self.text_view.props.buffer
         _, it = buffer.get_iter_at_line(line)
@@ -114,13 +112,13 @@ class TexwriterWindow(Adw.ApplicationWindow):
         buffer.place_cursor(it)
         self.text_view.grab_focus()
 
-    def on_open(self, action, _):
-        self.open_task = asyncio.create_task(self.open())
-
     def open(self, file=None):
         if file is None:
             dialog = LatexFileDialog()
             dialog.open(parent=self, callback=self.open_cb1)
+        else:
+            self.latexfile.file = file
+            self.latexfile.load_contents_async(self.open_cb2)
 
     def open_cb1(self, dialog, result):
         try:
@@ -134,10 +132,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
             return
 
         assert file is not None #I think dialog returns either error or file
-
-        self.latexfile.file = file
-
-        self.latexfile.load_contents_async(self.open_cb2)
+        self.open(file)
 
     def open_cb2(self, latexfile, result):
         try:
@@ -172,9 +167,10 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.banner.set_button_label(lbl)
         self.banner.set_revealed(True)
 
+    @Gtk.Template.Callback()
     def on_banner_button_clicked(self, button):
         self.banner.set_revealed(False)
-        asyncio.create_task(self.open(self.latexfile.file))
+        self.open(self.latexfile.file)
 
     def on_compile_action(self, action, _):
         if self._compile_task and not self._compile_task.done():

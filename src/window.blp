@@ -75,6 +75,7 @@ template $TexwriterWindow: Adw.ApplicationWindow{
 
           Adw.Banner banner {
             revealed: false;
+            button-clicked => $on_banner_button_clicked();
           }
 
           Gtk.ScrolledWindow {
@@ -95,7 +96,9 @@ template $TexwriterWindow: Adw.ApplicationWindow{
           StackPage {
             name: "pdf";
             title: "Pdf";
-            child: $PdfViewer pdfviewer {};
+            child: $PdfViewer pdfviewer {
+              synctex-back => $on_synctex_back();
+            };
           }
           StackPage {
             name: "log";
