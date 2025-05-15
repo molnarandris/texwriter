@@ -6,24 +6,50 @@ template $TexwriterWindow: Adw.ApplicationWindow {
   default-width: 800;
   default-height: 600;
 
-  content: Adw.ToolbarView {
-    [top]
-    Adw.HeaderBar {
-      [end]
-      MenuButton {
-        primary: true;
-        icon-name: "open-menu-symbolic";
-        tooltip-text: _("Main Menu");
-        menu-model: primary_menu;
+  content: Paned {
+      shrink-start-child: false;
+      shrink-end-child: false;
+    start-child: Adw.ToolbarView {
+      [top]
+      Adw.HeaderBar {
+        show-end-title-buttons: false;
+        [end]
+        MenuButton {
+          visible: false;
+          primary: true;
+          icon-name: "open-menu-symbolic";
+          tooltip-text: _("Main Menu");
+          menu-model: primary_menu;
+        }
       }
-    }
 
-    content: Label label {
-      label: _("Hello, World!");
+      content: Label {
+        label: _("Editor");
 
-      styles [
-        "title-1",
-      ]
+        styles [
+          "title-1",
+        ]
+      };
+    };
+    end-child: Adw.ToolbarView {
+      [top]
+      Adw.HeaderBar {
+        [end]
+        MenuButton {
+          primary: true;
+          icon-name: "open-menu-symbolic";
+          tooltip-text: _("Main Menu");
+          menu-model: primary_menu;
+        }
+      }
+
+      content: Label {
+        label: _("Pdf");
+
+        styles [
+          "title-1",
+        ]
+      };
     };
   };
 }
