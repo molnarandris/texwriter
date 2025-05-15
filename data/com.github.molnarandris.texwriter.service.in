@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=com.github.molnarandris.texwriter
+Exec=@bindir@/texwriter --gapplication-service
