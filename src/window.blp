@@ -6,15 +6,25 @@ template $TexwriterWindow: Adw.ApplicationWindow {
   default-width: 800;
   default-height: 600;
 
+  Adw.Breakpoint {
+        condition ("max-width: 600sp")
+
+        setters {
+          pdf_viewer.visible: false;
+          editor_header.show-end-title-buttons: true;
+          editor_menu.visible: true;
+        }
+      }
+
   content: Paned {
       shrink-start-child: false;
       shrink-end-child: false;
     start-child: Adw.ToolbarView {
       [top]
-      Adw.HeaderBar {
+      Adw.HeaderBar editor_header {
         show-end-title-buttons: false;
         [end]
-        MenuButton {
+        MenuButton editor_menu {
           visible: false;
           primary: true;
           icon-name: "open-menu-symbolic";
@@ -31,7 +41,7 @@ template $TexwriterWindow: Adw.ApplicationWindow {
         ]
       };
     };
-    end-child: Adw.ToolbarView {
+    end-child: Adw.ToolbarView pdf_viewer {
       [top]
       Adw.HeaderBar {
         [end]
