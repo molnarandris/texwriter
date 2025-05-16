@@ -24,5 +24,19 @@ from gi.repository import Gtk
 class TexwriterWindow(Adw.ApplicationWindow):
     __gtype_name__ = 'TexwriterWindow'
 
+    editor = Gtk.Template.Child()
+    pdf_viewer = Gtk.Template.Child()
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+    @Gtk.Template.Callback()
+    def on_show_pdf_button_clicked(self, button):
+        self.pdf_viewer.set_visible(True)
+        self.editor.set_visible(False)
+
+    @Gtk.Template.Callback()
+    def on_show_editor_button_clicked(self, button):
+        self.pdf_viewer.set_visible(False)
+        self.editor.set_visible(True)
+

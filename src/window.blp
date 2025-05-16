@@ -10,16 +10,19 @@ template $TexwriterWindow: Adw.ApplicationWindow {
         condition ("max-width: 600sp")
 
         setters {
+          editor.visible: true;
           pdf_viewer.visible: false;
           editor_header.show-end-title-buttons: true;
           editor_menu.visible: true;
+          show_pdf_button.visible: true;
+          show_editor_button.visible: true;
         }
       }
 
   content: Paned {
       shrink-start-child: false;
       shrink-end-child: false;
-    start-child: Adw.ToolbarView {
+    start-child: Adw.ToolbarView editor {
       [top]
       Adw.HeaderBar editor_header {
         show-end-title-buttons: false;
@@ -30,6 +33,13 @@ template $TexwriterWindow: Adw.ApplicationWindow {
           icon-name: "open-menu-symbolic";
           tooltip-text: _("Main Menu");
           menu-model: primary_menu;
+        }
+        [end]
+        Button show_pdf_button {
+          visible: false;
+          icon-name: "x-office-document-symbolic";
+          clicked => $on_show_pdf_button_clicked();
+          tooltip-text: _("Show PDF viewer");
         }
       }
 
@@ -44,6 +54,13 @@ template $TexwriterWindow: Adw.ApplicationWindow {
     end-child: Adw.ToolbarView pdf_viewer {
       [top]
       Adw.HeaderBar {
+        [start]
+        Button show_editor_button {
+          visible: false;
+          icon-name: "document-edit-symbolic";
+          clicked => $on_show_editor_button_clicked();
+          tooltip-text: _("Show editor");
+        }
         [end]
         MenuButton {
           primary: true;
