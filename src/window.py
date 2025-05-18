@@ -19,6 +19,7 @@
 
 from gi.repository import Adw
 from gi.repository import Gtk
+from gi.repository import Gio
 
 @Gtk.Template(resource_path='/com/github/molnarandris/texwriter/window.ui')
 class TexwriterWindow(Adw.ApplicationWindow):
@@ -29,6 +30,10 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        action = Gio.SimpleAction(name="compile")
+        action.connect("activate", self.on_compile_action)
+        self.add_action(action)
+        self.get_application().set_accels_for_action("win.compile", ['F5'])
 
     @Gtk.Template.Callback()
     def on_show_pdf_button_clicked(self, button):
@@ -40,3 +45,5 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.pdf_viewer.set_visible(False)
         self.editor.set_visible(True)
 
+    def on_compile_action(self, action, param):
+        print("Compiling")

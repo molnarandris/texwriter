@@ -41,6 +41,12 @@ template $TexwriterWindow: Adw.ApplicationWindow {
           clicked => $on_show_pdf_button_clicked();
           tooltip-text: _("Show PDF viewer");
         }
+        [end]
+        Button {
+          icon-name: "media-playback-start-symbolic";
+          tooltip-text: _("Compile");
+          action-name: "win.compile";
+        }
       }
 
       content: Label {
