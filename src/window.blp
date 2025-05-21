@@ -27,6 +27,12 @@ template $TexwriterWindow: Adw.ApplicationWindow {
       [top]
       Adw.HeaderBar editor_header {
         show-end-title-buttons: false;
+        [start]
+        Button {
+          label: _("Open");
+          tooltip-text: _("Open a file");
+          action-name: "win.open";
+        }
         [end]
         MenuButton editor_menu {
           visible: false;

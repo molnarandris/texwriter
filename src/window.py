@@ -40,6 +40,11 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.add_action(action)
         self.get_application().set_accels_for_action("win.compile", ['F5'])
 
+        action = Gio.SimpleAction(name="open")
+        action.connect("activate", self.on_open_action)
+        self.add_action(action)
+        self.get_application().set_accels_for_action("win.open", ['<Ctrl>o'])
+
     @Gtk.Template.Callback()
     def on_show_pdf_button_clicked(self, button):
         self.pdf_viewer.set_visible(True)
@@ -52,3 +57,6 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
     def on_compile_action(self, action, param):
         print("Compiling")
+
+    def on_open_action(self, action, param):
+        print("Opening")
