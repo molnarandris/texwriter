@@ -1,5 +1,6 @@
 using Gtk 4.0;
 using Adw 1;
+using GtkSource 5;
 
 template $TexwriterWindow: Adw.ApplicationWindow {
   title: _("TeXWriter");
@@ -49,13 +50,7 @@ template $TexwriterWindow: Adw.ApplicationWindow {
         }
       }
 
-      content: Label {
-        label: _("Editor");
-
-        styles [
-          "title-1",
-        ]
-      };
+      content: GtkSource.View {};
     };
     end-child: Adw.ToolbarView pdf_viewer {
       [top]

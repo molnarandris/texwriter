@@ -24,6 +24,21 @@
     ],
     "modules" : [
         {
+            "name": "sourceview",
+            "buildsystem": "meson",
+            "sources": [
+                {
+                    "type": "archive",
+                    "url": "https://download.gnome.org/sources/gtksourceview/5.14/gtksourceview-5.14.1.tar.xz",
+                    "sha256": "009862e87b929da5a724ece079f01f8cee29e74797a1ecac349f58c15a3cbc58",
+                    "x-checker-data": {
+                        "type": "gnome",
+                        "name": "sourceview"
+                    }
+                }
+            ]
+        },
+        {
             "name" : "texwriter",
             "builddir" : true,
             "buildsystem" : "meson",
