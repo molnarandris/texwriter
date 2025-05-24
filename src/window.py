@@ -23,6 +23,8 @@ from gi.repository import GtkSource
 from gi.repository import Adw
 from gi.repository import Gtk
 from gi.repository import Gio
+from gi.repository import GLib
+from .asyncio import create_task
 
 GtkSource.init()
 
@@ -32,6 +34,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
     editor = Gtk.Template.Child()
     pdf_viewer = Gtk.Template.Child()
+    source_view = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -64,7 +67,35 @@ class TexwriterWindow(Adw.ApplicationWindow):
         print("Compiling")
 
     def on_open_action(self, action, param):
-        print("Opening")
+        create_task(self.open())
+
+    async def open(self):
+        dialog = Gtk.FileDialog()
+        try:
+            file = await dialog.open(self, None)
+        except GLib.GError as err:
+            if err.matches(Gtk.dialog_error_quark(), Gtk.DialogError.DISMISSED):
+                return
+            if err.matches(Gtk.dialog_error_quark(), Gtk.DialogError.FAILED):
+                print(f"Could not select file")
+                return
+            raise
+
+        success, contents, etag = await file.load_contents_async(None)
+        if not success:
+            print(f"Error opening {file.peek_path()}")
+            return
+
+        try:
+            text = contents.decode("utf-8")
+        except UnicodeError as err:
+            print(f"The file {file.peek_path()} is not encoded in unicode")
+            return
+
+        buffer = self.source_view.get_buffer()
+        buffer.set_text(text)
+        start = buffer.get_start_iter()
+        buffer.place_cursor(start)
 
     def on_save_action(self, action, param):
         print("Saving")
