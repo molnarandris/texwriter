@@ -56,7 +56,9 @@ template $TexwriterWindow: Adw.ApplicationWindow {
         }
       }
 
-      content: GtkSource.View source_view {};
+      content: ScrolledWindow {
+        GtkSource.View source_view {}
+      };
     };
     end-child: Adw.ToolbarView pdf_viewer {
       [top]
