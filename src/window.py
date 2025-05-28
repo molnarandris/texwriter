@@ -72,6 +72,24 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
     async def open(self):
         dialog = Gtk.FileDialog()
+
+        latex_filter = Gio.ListStore.new(Gtk.FileFilter)
+
+        f = Gtk.FileFilter()
+        f.add_mime_type("text/x-tex")
+        latex_filter.append(f)
+
+        f = Gtk.FileFilter()
+        f.add_mime_type("text/plain")
+        latex_filter.append(f)
+
+        f = Gtk.FileFilter()
+        f.add_pattern("*")
+        f.set_name("All files")
+        latex_filter.append(f)
+
+        dialog.set_filters(latex_filter)
+
         try:
             file = await dialog.open(self, None)
         except GLib.GError as err:
