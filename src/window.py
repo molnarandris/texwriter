@@ -35,6 +35,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
     editor = Gtk.Template.Child()
     pdf_viewer = Gtk.Template.Child()
     source_view = Gtk.Template.Child()
+    toast_overlay = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -77,19 +78,25 @@ class TexwriterWindow(Adw.ApplicationWindow):
             if err.matches(Gtk.dialog_error_quark(), Gtk.DialogError.DISMISSED):
                 return
             if err.matches(Gtk.dialog_error_quark(), Gtk.DialogError.FAILED):
-                print(f"Could not select file")
+                toast = Adw.Toast.new("Could not select file")
+                toast.set_timeout(2)
+                self.toast_overlay.add_toast(toast)
                 return
             raise
 
         success, contents, etag = await file.load_contents_async(None)
         if not success:
-            print(f"Error opening {file.peek_path()}")
+            toast = Adw.Toast.new(f"Error opening {file.peek_path()}")
+            toast.set_timeout(2)
+            self.toast_overlay.add_toast(toast)
             return
 
         try:
             text = contents.decode("utf-8")
         except UnicodeError as err:
-            print(f"The file {file.peek_path()} is not encoded in unicode")
+            toast = Adw.Toast.new(f"The file {file.peek_path()} is not encoded in unicode")
+            toast.set_timeout(2)
+            self.toast_overlay.add_toast(toast)
             return
 
         buffer = self.source_view.get_buffer()

@@ -20,73 +20,75 @@ template $TexwriterWindow: Adw.ApplicationWindow {
         }
       }
 
-  content: Paned {
-      shrink-start-child: false;
-      shrink-end-child: false;
-    start-child: Adw.ToolbarView editor {
-      [top]
-      Adw.HeaderBar editor_header {
-        show-end-title-buttons: false;
-        [start]
-        Button {
-          label: _("Open");
-          tooltip-text: _("Open a file");
-          action-name: "win.open";
+    content: Adw.ToastOverlay toast_overlay {
+      Paned {
+        shrink-start-child: false;
+        shrink-end-child: false;
+        start-child: Adw.ToolbarView editor {
+        [top]
+        Adw.HeaderBar editor_header {
+          show-end-title-buttons: false;
+          [start]
+          Button {
+            label: _("Open");
+            tooltip-text: _("Open a file");
+            action-name: "win.open";
+          }
+          [end]
+          MenuButton editor_menu {
+            visible: false;
+            primary: true;
+            icon-name: "open-menu-symbolic";
+            tooltip-text: _("Main Menu");
+            menu-model: primary_menu;
+          }
+          [end]
+          Button show_pdf_button {
+            visible: false;
+            icon-name: "x-office-document-symbolic";
+            clicked => $on_show_pdf_button_clicked();
+            tooltip-text: _("Show PDF viewer");
+          }
+          [end]
+          Button {
+            icon-name: "media-playback-start-symbolic";
+            tooltip-text: _("Compile");
+            action-name: "win.compile";
+          }
         }
-        [end]
-        MenuButton editor_menu {
-          visible: false;
-          primary: true;
-          icon-name: "open-menu-symbolic";
-          tooltip-text: _("Main Menu");
-          menu-model: primary_menu;
-        }
-        [end]
-        Button show_pdf_button {
-          visible: false;
-          icon-name: "x-office-document-symbolic";
-          clicked => $on_show_pdf_button_clicked();
-          tooltip-text: _("Show PDF viewer");
-        }
-        [end]
-        Button {
-          icon-name: "media-playback-start-symbolic";
-          tooltip-text: _("Compile");
-          action-name: "win.compile";
-        }
-      }
 
-      content: ScrolledWindow {
-        GtkSource.View source_view {}
+        content: ScrolledWindow {
+          GtkSource.View source_view {}
+        };
       };
-    };
-    end-child: Adw.ToolbarView pdf_viewer {
-      [top]
-      Adw.HeaderBar {
-        [start]
-        Button show_editor_button {
-          visible: false;
-          icon-name: "document-edit-symbolic";
-          clicked => $on_show_editor_button_clicked();
-          tooltip-text: _("Show editor");
+      end-child: Adw.ToolbarView pdf_viewer {
+        [top]
+        Adw.HeaderBar {
+          [start]
+          Button show_editor_button {
+            visible: false;
+            icon-name: "document-edit-symbolic";
+            clicked => $on_show_editor_button_clicked();
+            tooltip-text: _("Show editor");
+          }
+          [end]
+          MenuButton {
+            primary: true;
+            icon-name: "open-menu-symbolic";
+            tooltip-text: _("Main Menu");
+            menu-model: primary_menu;
+          }
         }
-        [end]
-        MenuButton {
-          primary: true;
-          icon-name: "open-menu-symbolic";
-          tooltip-text: _("Main Menu");
-          menu-model: primary_menu;
-        }
-      }
 
-      content: Label {
-        label: _("Pdf");
+        content: Label {
+          label: _("Pdf");
 
-        styles [
-          "title-1",
-        ]
+          styles [
+            "title-1",
+          ]
+        };
       };
-    };
+    }
   };
 }
 
