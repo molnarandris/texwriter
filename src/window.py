@@ -25,6 +25,7 @@ from gi.repository import Gtk
 from gi.repository import Gio
 from gi.repository import GLib
 from .asyncio import create_task
+import asyncio
 
 GtkSource.init()
 
@@ -136,7 +137,71 @@ class TexwriterWindow(Adw.ApplicationWindow):
         buffer.place_cursor(start)
 
     def on_save_action(self, action, param):
-        print("Saving")
+        create_task(self.save())
+
+    async def save(self):
+        if self._file is None:
+            dialog = Gtk.FileDialog()
+
+            latex_filter = Gio.ListStore.new(Gtk.FileFilter)
+
+            f = Gtk.FileFilter()
+            f.add_mime_type("text/x-tex")
+            latex_filter.append(f)
+
+            f = Gtk.FileFilter()
+            f.add_mime_type("text/plain")
+            latex_filter.append(f)
+
+            f = Gtk.FileFilter()
+            f.add_pattern("*")
+            f.set_name("All files")
+            latex_filter.append(f)
+
+            dialog.set_filters(latex_filter)
+
+            try:
+                file = await dialog.save(self, None)
+            except GLib.GError as err:
+                if err.matches(Gtk.dialog_error_quark(), Gtk.DialogError.DISMISSED):
+                    return
+                if err.matches(Gtk.dialog_error_quark(), Gtk.DialogError.FAILED):
+                    toast = Adw.Toast.new("Cannot save to file")
+                    toast.set_timeout(2)
+                    self.toast_overlay.add_toast(toast)
+                    return
+                raise
+
+        else:
+            file = self._file
+
+
+        buffer = self.source_view.get_buffer()
+        start = buffer.get_start_iter()
+        end = buffer.get_end_iter()
+        text = buffer.get_text(start, end, False)
+
+        info = file.query_info("standard::display-name",
+                               Gio.FileQueryInfoFlags.NONE)
+        if info:
+            display_name = info.get_attribute_string("standard::display-name")
+        else:
+            display_name = file.get_basename()
+
+        self._monitor.handler_block_by_func(self.file_monitor_cb)
+        try:
+            file = open(file.peek_path(), "w")
+        except PermissionError:
+            toast = Adw.Toast.new("Cannot save to {display_name}: permission denied")
+            toast.set_timeout(2)
+            self.toast_overlay.add_toast(toast)
+
+        try:
+            file.write(text)
+        finally:
+            file.close()
+            await asyncio.sleep(0.05) #need to wait a bit before unblocking
+            self._monitor.handler_unblock_by_func(self.file_monitor_cb)
 
     def file_monitor_cb(self, monitor, file, other_file, event):
         if event != Gio.FileMonitorEvent.CHANGES_DONE_HINT:
