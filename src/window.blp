@@ -57,8 +57,19 @@ template $TexwriterWindow: Adw.ApplicationWindow {
           }
         }
 
-        content: ScrolledWindow {
-          GtkSource.View source_view {}
+        content: Box{
+          orientation: vertical;
+          Adw.Banner banner {
+            title: _("The file changed on the disk");
+            button-label: _("Reload");
+            button-clicked => $on_banner_button_clicked();
+
+            styles ["warning"]
+          }
+          ScrolledWindow {
+            vexpand: true;
+            GtkSource.View source_view {}
+          }
         };
       };
       end-child: Adw.ToolbarView pdf_viewer {

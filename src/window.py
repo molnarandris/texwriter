@@ -36,6 +36,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
     pdf_viewer = Gtk.Template.Child()
     source_view = Gtk.Template.Child()
     toast_overlay = Gtk.Template.Child()
+    banner = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -54,6 +55,9 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.add_action(action)
         self.get_application().set_accels_for_action("win.save", ['<Ctrl>s'])
 
+        self._monitor = None
+        self._file = None
+
     @Gtk.Template.Callback()
     def on_show_pdf_button_clicked(self, button):
         self.pdf_viewer.set_visible(True)
@@ -70,37 +74,40 @@ class TexwriterWindow(Adw.ApplicationWindow):
     def on_open_action(self, action, param):
         create_task(self.open())
 
-    async def open(self):
-        dialog = Gtk.FileDialog()
+    async def open(self, file=None):
 
-        latex_filter = Gio.ListStore.new(Gtk.FileFilter)
+        if file is None:
 
-        f = Gtk.FileFilter()
-        f.add_mime_type("text/x-tex")
-        latex_filter.append(f)
+            dialog = Gtk.FileDialog()
 
-        f = Gtk.FileFilter()
-        f.add_mime_type("text/plain")
-        latex_filter.append(f)
+            latex_filter = Gio.ListStore.new(Gtk.FileFilter)
 
-        f = Gtk.FileFilter()
-        f.add_pattern("*")
-        f.set_name("All files")
-        latex_filter.append(f)
+            f = Gtk.FileFilter()
+            f.add_mime_type("text/x-tex")
+            latex_filter.append(f)
 
-        dialog.set_filters(latex_filter)
+            f = Gtk.FileFilter()
+            f.add_mime_type("text/plain")
+            latex_filter.append(f)
 
-        try:
-            file = await dialog.open(self, None)
-        except GLib.GError as err:
-            if err.matches(Gtk.dialog_error_quark(), Gtk.DialogError.DISMISSED):
-                return
-            if err.matches(Gtk.dialog_error_quark(), Gtk.DialogError.FAILED):
-                toast = Adw.Toast.new("Could not select file")
-                toast.set_timeout(2)
-                self.toast_overlay.add_toast(toast)
-                return
-            raise
+            f = Gtk.FileFilter()
+            f.add_pattern("*")
+            f.set_name("All files")
+            latex_filter.append(f)
+
+            dialog.set_filters(latex_filter)
+
+            try:
+                file = await dialog.open(self, None)
+            except GLib.GError as err:
+                if err.matches(Gtk.dialog_error_quark(), Gtk.DialogError.DISMISSED):
+                    return
+                if err.matches(Gtk.dialog_error_quark(), Gtk.DialogError.FAILED):
+                    toast = Adw.Toast.new("Could not select file")
+                    toast.set_timeout(2)
+                    self.toast_overlay.add_toast(toast)
+                    return
+                raise
 
         success, contents, etag = await file.load_contents_async(None)
         if not success:
@@ -117,6 +124,12 @@ class TexwriterWindow(Adw.ApplicationWindow):
             self.toast_overlay.add_toast(toast)
             return
 
+        if self._monitor is not None:
+            self._monitor.disconnect_by_func(self.file_monitor_cb)
+        self._monitor = file.monitor(Gio.FileMonitorFlags.NONE, None)
+        self._monitor.connect("changed", self.file_monitor_cb)
+        self._file = file
+
         buffer = self.source_view.get_buffer()
         buffer.set_text(text)
         start = buffer.get_start_iter()
@@ -124,3 +137,14 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
     def on_save_action(self, action, param):
         print("Saving")
+
+    def file_monitor_cb(self, monitor, file, other_file, event):
+        if event != Gio.FileMonitorEvent.CHANGES_DONE_HINT:
+            return
+        self.banner.set_revealed(True)
+
+    @Gtk.Template.Callback()
+    def on_banner_button_clicked(self, user_data):
+        self.banner.set_revealed(False)
+        create_task(self.open(self._file))
+
