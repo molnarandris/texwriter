@@ -24,7 +24,7 @@ from gi.repository import Adw
 from gi.repository import Gtk
 from gi.repository import Gio
 from gi.repository import GLib
-from .asyncio import create_task
+from .asyncio import create_task, run_command_on_host
 import asyncio
 
 GtkSource.init()
@@ -70,7 +70,30 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.editor.set_visible(True)
 
     def on_compile_action(self, action, param):
-        print("Compiling")
+        create_task(self.compile())
+
+    async def compile(self):
+        if self._file is None:
+            await self.save()
+
+        filename = self._file.peek_path()
+        folder = self._file.get_parent().peek_path()
+
+        interpreter = 'latexmk'
+        cmd = [interpreter, '-synctex=1', '-interaction=nonstopmode', '-pdf',
+               "-g", "--output-directory=" + folder, filename]
+
+        success, log_text = await run_command_on_host(cmd)
+
+        if not success:
+            toast = Adw.Toast.new("Compilation failed")
+            toast.set_timeout(2)
+            self.toast_overlay.add_toast(toast)
+            print(log_text)
+        else:
+            toast = Adw.Toast.new("Compilation finished")
+            toast.set_timeout(2)
+            self.toast_overlay.add_toast(toast)
 
     def on_open_action(self, action, param):
         create_task(self.open())
