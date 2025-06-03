@@ -24,7 +24,7 @@ from gi.repository import Adw
 from gi.repository import Gtk
 from gi.repository import Gio
 from gi.repository import GLib
-from .asyncio import create_task, run_command_on_host
+from .utils import create_task, run_command_on_host
 import asyncio
 
 GtkSource.init()
