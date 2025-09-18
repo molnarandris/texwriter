@@ -91,13 +91,7 @@ template $TexwriterWindow: Adw.ApplicationWindow {
           }
         }
 
-        content: Label {
-          label: _("Pdf");
-
-          styles [
-            "title-1",
-          ]
-        };
+        content: $PdfViewer pdfviewer {};
       };
     }
   };

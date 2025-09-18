@@ -25,6 +25,7 @@ from gi.repository import Gtk
 from gi.repository import Gio
 from gi.repository import GLib
 from .utils import create_task, run_command_on_host
+from .pdfviewer import PdfViewer
 import asyncio
 
 GtkSource.init()
