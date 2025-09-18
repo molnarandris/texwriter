@@ -76,6 +76,11 @@ class TexwriterWindow(Adw.ApplicationWindow):
         if self._file is None:
             await self.save()
 
+        if self._file is None:
+            toast = Adw.Toast.new("Compilation failed: file saving dismissed by user")
+            toast.set_timeout(2)
+            self.toast_overlay.add_toast(toast)
+            return
         filename = self._file.peek_path()
         folder = self._file.get_parent().peek_path()
 
