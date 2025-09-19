@@ -76,8 +76,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
         create_task(self.compile())
 
     async def compile(self):
-        if self._file is None:
-            await self.save()
+        await self.save()
 
         if self._file is None:
             toast = Adw.Toast.new("Compilation failed: file saving dismissed by user")
