@@ -62,6 +62,31 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self._monitor = None
         self._file = None
 
+        buffer = self.source_view.get_buffer()
+        buffer.connect("modified-changed", self.on_buffer_modified_changed)
+
+    def on_buffer_modified_changed(self, buffer):
+        if self._file is None:
+            display_name = "New file"
+            directory = "unsaved"
+        else:
+            info = self._file.query_info("standard::display-name",
+                                         Gio.FileQueryInfoFlags.NONE)
+            if info:
+                display_name = info.get_attribute_string("standard::display-name")
+            else:
+                display_name = self._file.get_basename()
+
+            directory = self._file.get_parent().peek_path()
+
+        if buffer.get_modified():
+            title = "• " + display_name
+        else:
+            title = display_name
+
+        self.start_pane_title.set_title(title)
+        self.start_pane_title.set_subtitle(directory)
+
     @Gtk.Template.Callback()
     def on_show_pdf_button_clicked(self, button):
         self.end_pane.set_visible(True)
@@ -168,22 +193,11 @@ class TexwriterWindow(Adw.ApplicationWindow):
         buffer.set_text(text)
         start = buffer.get_start_iter()
         buffer.place_cursor(start)
+        buffer.set_modified(False)
 
         path = file.peek_path()
         path = path[:-4] + ".pdf"
         self.pdf_viewer.set_path(path)
-
-        info = file.query_info("standard::display-name",
-                               Gio.FileQueryInfoFlags.NONE)
-        if info:
-            display_name = info.get_attribute_string("standard::display-name")
-        else:
-            display_name = file.get_basename()
-
-        directory = file.get_parent().peek_path()
-
-        self.start_pane_title.set_title(display_name)
-        self.start_pane_title.set_subtitle(directory)
 
     def on_save_action(self, action, param):
         create_task(self.save())
@@ -251,6 +265,8 @@ class TexwriterWindow(Adw.ApplicationWindow):
             toast = Adw.Toast.new("Cannot save to {display_name}: can't write file")
             toast.set_timeout(2)
             self.toast_overlay.add_toast(toast)
+        else:
+            buffer.set_modified(False)
         finally:
             file.close()
             await asyncio.sleep(0.05) #need to wait a bit before unblocking
