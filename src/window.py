@@ -97,10 +97,13 @@ class TexwriterWindow(Adw.ApplicationWindow):
             toast.set_timeout(2)
             self.toast_overlay.add_toast(toast)
             print(log_text)
+            self.pdf_viewer.show_empty()
         else:
             toast = Adw.Toast.new("Compilation finished")
             toast.set_timeout(2)
             self.toast_overlay.add_toast(toast)
+            print(log_text)
+            self.pdf_viewer.reload()
 
     def on_open_action(self, action, param):
         create_task(self.open())
@@ -165,6 +168,10 @@ class TexwriterWindow(Adw.ApplicationWindow):
         buffer.set_text(text)
         start = buffer.get_start_iter()
         buffer.place_cursor(start)
+
+        path = file.peek_path()
+        path = path[:-4] + ".pdf"
+        self.pdf_viewer.set_path(path)
 
     def on_save_action(self, action, param):
         create_task(self.save())

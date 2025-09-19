@@ -2,11 +2,24 @@ using Gtk 4.0;
 using Adw 1;
 
 template $PdfViewer: Gtk.Widget {
-  Label {
-    label: _("Pdf");
+  Stack stack {
+    StackPage {
+      name: "empty";
 
-    styles [
-      "title-1",
-    ]
+      child: Adw.StatusPage {
+            title: "Missing pdf";
+            description: "Compile the project for viewing the pdf";
+      };
+    }
+
+    StackPage {
+      name: "content";
+
+      child: Box box {
+        Label {
+          label: "Yeah";
+        }
+      };
+    }
   }
 }
