@@ -11,8 +11,8 @@ template $TexwriterWindow: Adw.ApplicationWindow {
         condition ("max-width: 600sp")
 
         setters {
-          editor.visible: true;
-          pdf_viewer.visible: false;
+          start_pane.visible: true;
+          end_pane.visible: false;
           editor_header.show-end-title-buttons: true;
           editor_menu.visible: true;
           show_pdf_button.visible: true;
@@ -24,7 +24,7 @@ template $TexwriterWindow: Adw.ApplicationWindow {
       Paned {
         shrink-start-child: false;
         shrink-end-child: false;
-        start-child: Adw.ToolbarView editor {
+        start-child: Adw.ToolbarView start_pane {
         [top]
         Adw.HeaderBar editor_header {
           show-end-title-buttons: false;
@@ -72,7 +72,7 @@ template $TexwriterWindow: Adw.ApplicationWindow {
           }
         };
       };
-      end-child: Adw.ToolbarView pdf_viewer {
+      end-child: Adw.ToolbarView end_pane {
         [top]
         Adw.HeaderBar {
           [start]
@@ -91,7 +91,7 @@ template $TexwriterWindow: Adw.ApplicationWindow {
           }
         }
 
-        content: $PdfViewer pdfviewer {};
+        content: $PdfViewer pdf_viewer {};
       };
     }
   };

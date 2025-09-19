@@ -34,7 +34,8 @@ GtkSource.init()
 class TexwriterWindow(Adw.ApplicationWindow):
     __gtype_name__ = 'TexwriterWindow'
 
-    editor = Gtk.Template.Child()
+    start_pane = Gtk.Template.Child() # holds the editor
+    end_pane = Gtk.Template.Child() # holds the pdf viewer
     pdf_viewer = Gtk.Template.Child()
     source_view = Gtk.Template.Child()
     toast_overlay = Gtk.Template.Child()
@@ -62,13 +63,13 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def on_show_pdf_button_clicked(self, button):
-        self.pdf_viewer.set_visible(True)
-        self.editor.set_visible(False)
+        self.end_pane.set_visible(True)
+        self.start_pane.set_visible(False)
 
     @Gtk.Template.Callback()
     def on_show_editor_button_clicked(self, button):
-        self.pdf_viewer.set_visible(False)
-        self.editor.set_visible(True)
+        self.end_pane.set_visible(False)
+        self.start_pane.set_visible(True)
 
     def on_compile_action(self, action, param):
         create_task(self.compile())
