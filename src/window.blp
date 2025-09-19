@@ -72,7 +72,11 @@ template $TexwriterWindow: Adw.ApplicationWindow {
           }
           ScrolledWindow {
             vexpand: true;
-            GtkSource.View source_view {}
+            GtkSource.View source_view {
+              monospace: true;
+              wrap-mode: word;
+              highlight-current-line: true;
+            }
           }
         };
       };
