@@ -65,7 +65,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
         buffer = self.source_view.get_buffer()
         buffer.connect("modified-changed", self.on_buffer_modified_changed)
 
-    def on_buffer_modified_changed(self, buffer):
+    def get_file_info(self):
         if self._file is None:
             display_name = "New file"
             directory = "unsaved"
@@ -79,6 +79,10 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
             directory = self._file.get_parent().peek_path()
 
+        return directory, display_name
+
+    def on_buffer_modified_changed(self, buffer):
+        directory, display_name = self.get_file_info()
         if buffer.get_modified():
             title = "• " + display_name
         else:
@@ -235,25 +239,16 @@ class TexwriterWindow(Adw.ApplicationWindow):
                     return
                 raise
 
-        else:
-            file = self._file
-
-
         buffer = self.source_view.get_buffer()
         start = buffer.get_start_iter()
         end = buffer.get_end_iter()
         text = buffer.get_text(start, end, False)
 
-        info = file.query_info("standard::display-name",
-                               Gio.FileQueryInfoFlags.NONE)
-        if info:
-            display_name = info.get_attribute_string("standard::display-name")
-        else:
-            display_name = file.get_basename()
+        _, display_name = self.get_file_info()
 
         self._monitor.handler_block_by_func(self.file_monitor_cb)
         try:
-            file = open(file.peek_path(), "w")
+            file = open(self._file.peek_path(), "w")
         except PermissionError:
             toast = Adw.Toast.new("Cannot save to {display_name}: permission denied")
             toast.set_timeout(2)
