@@ -36,6 +36,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
     start_pane = Gtk.Template.Child() # holds the editor
     end_pane = Gtk.Template.Child() # holds the pdf viewer
+    start_pane_title = Gtk.Template.Child()
     pdf_viewer = Gtk.Template.Child()
     source_view = Gtk.Template.Child()
     toast_overlay = Gtk.Template.Child()
@@ -172,6 +173,18 @@ class TexwriterWindow(Adw.ApplicationWindow):
         path = file.peek_path()
         path = path[:-4] + ".pdf"
         self.pdf_viewer.set_path(path)
+
+        info = file.query_info("standard::display-name",
+                               Gio.FileQueryInfoFlags.NONE)
+        if info:
+            display_name = info.get_attribute_string("standard::display-name")
+        else:
+            display_name = file.get_basename()
+
+        directory = file.get_parent().peek_path()
+
+        self.start_pane_title.set_title(display_name)
+        self.start_pane_title.set_subtitle(directory)
 
     def on_save_action(self, action, param):
         create_task(self.save())

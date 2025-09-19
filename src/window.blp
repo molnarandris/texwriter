@@ -28,6 +28,10 @@ template $TexwriterWindow: Adw.ApplicationWindow {
         [top]
         Adw.HeaderBar editor_header {
           show-end-title-buttons: false;
+          title-widget: Adw.WindowTitle start_pane_title {
+            title: "New file";
+            subtitle: "unsaved";
+          };
           [start]
           Button {
             label: _("Open");
