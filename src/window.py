@@ -247,6 +247,10 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
         try:
             file.write(text)
+        except (IOError, OSError):
+            toast = Adw.Toast.new("Cannot save to {display_name}: can't write file")
+            toast.set_timeout(2)
+            self.toast_overlay.add_toast(toast)
         finally:
             file.close()
             await asyncio.sleep(0.05) #need to wait a bit before unblocking
