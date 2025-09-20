@@ -53,6 +53,20 @@
           ]
         },
         {
+            "name": "pymupdf",
+            "buildsystem": "simple",
+            "build-commands": [
+                "pip3 install --prefix=/app pymupdf-1.26.4-cp39-abi3-manylinux_2_28_x86_64.whl"
+            ],
+            "sources": [
+                {
+                    "type": "file",
+                    "url": "https://files.pythonhosted.org/packages/4e/c6/d3cfafc75d383603884edeabe4821a549345df954a88d79e6764e2c87601/pymupdf-1.26.4-cp39-abi3-manylinux_2_28_x86_64.whl",
+                    "sha256": "973a6dda61ebd34040e4df3753bf004b669017663fbbfdaa294d44eceba98de0"
+                }
+            ]
+        },
+        {
             "name" : "texwriter",
             "builddir" : true,
             "buildsystem" : "meson",
