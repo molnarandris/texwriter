@@ -15,9 +15,10 @@ template $PdfViewer: Gtk.Widget {
     StackPage {
       name: "content";
 
-      child: Box box {
-        Label {
-          label: "Yeah";
+      child: ScrolledWindow {
+        Box box {
+          orientation: vertical;
+          spacing: 5;
         }
       };
     }
