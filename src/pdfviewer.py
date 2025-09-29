@@ -41,11 +41,39 @@ class PdfViewer(Gtk.Widget):
             self.box.remove(p)
             p = self.box.get_first_child()
 
-        RGB = GdkPixbuf.Colorspace.RGB
         for p in document.pages():
-            pm = p.get_pixmap()
-            pixbuf = GdkPixbuf.Pixbuf.new_from_data(pm.samples, RGB, pm.alpha, 8, pm.width, pm.height, pm.stride)
-            texture = Gdk.Texture.new_for_pixbuf(pixbuf)
-            pic = Gtk.Picture.new_for_paintable(texture)
-            pic.set_can_shrink(False)
-            self.box.append(pic)
+            page = PdfPage(p)
+            self.box.append(page)
+
+
+class PdfPage(Gtk.Widget):
+    __gtype_name__ = 'PdfPage'
+
+    def __init__(self, page):
+        super().__init__()
+        self.page = page
+        self.scale = 1
+        self.render()
+
+    def render(self):
+        RGB = GdkPixbuf.Colorspace.RGB
+        pm = self.page.get_pixmap()
+        pixbuf = GdkPixbuf.Pixbuf.new_from_data(pm.samples, RGB, pm.alpha, 8, pm.width, pm.height, pm.stride)
+        self.texture = Gdk.Texture.new_for_pixbuf(pixbuf)
+
+    def do_get_request_mode(self):
+        return Gtk.SizeRequestMode.CONSTANT_SIZE
+
+    def do_snapshot(self, snapshot):
+        width = self.texture.get_intrinsic_width() * self.scale
+        height = self.texture.get_intrinsic_height() * self.scale
+        self.texture.snapshot(snapshot, width, height)
+
+    def do_measure(self, orientation, for_size):
+        if orientation == Gtk.Orientation.HORIZONTAL:
+            width = self.texture.get_intrinsic_width() * self.scale
+            return (width, width, -1, -1)
+        else:
+            height = self.texture.get_intrinsic_height() * self.scale
+            return (height, height, -1, -1)
+
