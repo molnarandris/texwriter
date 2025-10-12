@@ -52,12 +52,12 @@ class PdfPage(Gtk.Widget):
     def __init__(self, page):
         super().__init__()
         self.page = page
-        self.scale = 1
+        self.scale = 0.4
         self.render()
 
     def render(self):
         RGB = GdkPixbuf.Colorspace.RGB
-        pm = self.page.get_pixmap()
+        pm = self.page.get_pixmap(dpi = 200)
         pixbuf = GdkPixbuf.Pixbuf.new_from_data(pm.samples, RGB, pm.alpha, 8, pm.width, pm.height, pm.stride)
         self.texture = Gdk.Texture.new_for_pixbuf(pixbuf)
 
