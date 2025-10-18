@@ -27,6 +27,7 @@ from gi.repository import GLib
 from .utils import create_task, run_command_on_host
 from .pdfviewer import PdfViewer
 import asyncio
+import re
 
 GtkSource.init()
 
@@ -63,7 +64,9 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self._file = None
 
         buffer = self.source_view.get_buffer()
+        self.command_tag = buffer.create_tag("command", foreground="#cf222e")
         buffer.connect("modified-changed", self.on_buffer_modified_changed)
+        buffer.connect("changed", self.on_buffer_changed)
 
     def get_file_info(self):
         if self._file is None:
@@ -195,6 +198,8 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
         buffer = self.source_view.get_buffer()
         buffer.set_text(text)
+        start, end = buffer.get_bounds()
+        self.highlight_commands(buffer, start, end)
         start = buffer.get_start_iter()
         buffer.place_cursor(start)
         buffer.set_modified(False)
@@ -202,6 +207,25 @@ class TexwriterWindow(Adw.ApplicationWindow):
         path = file.peek_path()
         path = path[:-4] + ".pdf"
         self.pdf_viewer.set_path(path)
+
+    def highlight_commands(self, buffer, start, end):
+        buffer.remove_all_tags(start, end)
+        txt = buffer.get_text(start, end, True)
+        command_regex = r'\\[a-zA-Z]+'
+        for m in re.finditer(command_regex, txt):
+            start_it = start.copy()
+            start_it.forward_chars(m.start())
+            end_it = start.copy()
+            end_it.forward_chars(m.end())
+            buffer.apply_tag(self.command_tag, start_it, end_it)
+
+    def on_buffer_changed(self, buffer):
+        insert = buffer.get_insert()
+        start = buffer.get_iter_at_mark(insert)
+        start.backward_line()
+        end = buffer.get_iter_at_mark(insert)
+        end.forward_line()
+        self.highlight_commands(buffer, start, end)
 
     def on_save_action(self, action, param):
         create_task(self.save())
@@ -276,4 +300,5 @@ class TexwriterWindow(Adw.ApplicationWindow):
     def on_banner_button_clicked(self, user_data):
         self.banner.set_revealed(False)
         create_task(self.open(self._file))
+
 
