@@ -47,12 +47,12 @@ class TexwriterWindow(Adw.ApplicationWindow):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         action = Gio.SimpleAction(name="compile")
-        action.connect("activate", self.on_compile_action)
+        action.connect("activate", lambda *_ : create_task(self.compile()))
         self.add_action(action)
         self.get_application().set_accels_for_action("win.compile", ['F5'])
 
         action = Gio.SimpleAction(name="open")
-        action.connect("activate", self.on_open_action)
+        action.connect("activate", lambda *_ : create_task(self.open()))
         self.add_action(action)
         self.get_application().set_accels_for_action("win.open", ['<Ctrl>o'])
 
@@ -90,9 +90,6 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.end_pane.set_visible(False)
         self.start_pane.set_visible(True)
 
-    def on_compile_action(self, action, param):
-        create_task(self.compile())
-
     async def compile(self):
         await self.save()
 
@@ -122,9 +119,6 @@ class TexwriterWindow(Adw.ApplicationWindow):
             self.toast_overlay.add_toast(toast)
             print(log_text)
             self.pdf_viewer.reload()
-
-    def on_open_action(self, action, param):
-        create_task(self.open())
 
     async def open(self, file=None):
 
