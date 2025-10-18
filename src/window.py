@@ -26,6 +26,7 @@ from gi.repository import Gio
 from gi.repository import GLib
 from .utils import create_task, run_command_on_host
 from .pdfviewer import PdfViewer
+from .latexfile import LATEX_FILTER
 import asyncio
 import re
 
@@ -145,23 +146,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
         if file is None:
 
             dialog = Gtk.FileDialog()
-
-            latex_filter = Gio.ListStore.new(Gtk.FileFilter)
-
-            f = Gtk.FileFilter()
-            f.add_mime_type("text/x-tex")
-            latex_filter.append(f)
-
-            f = Gtk.FileFilter()
-            f.add_mime_type("text/plain")
-            latex_filter.append(f)
-
-            f = Gtk.FileFilter()
-            f.add_pattern("*")
-            f.set_name("All files")
-            latex_filter.append(f)
-
-            dialog.set_filters(latex_filter)
+            dialog.set_filters(LATEX_FILTER)
 
             try:
                 file = await dialog.open(self, None)
@@ -233,23 +218,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
     async def save(self):
         if self._file is None:
             dialog = Gtk.FileDialog()
-
-            latex_filter = Gio.ListStore.new(Gtk.FileFilter)
-
-            f = Gtk.FileFilter()
-            f.add_mime_type("text/x-tex")
-            latex_filter.append(f)
-
-            f = Gtk.FileFilter()
-            f.add_mime_type("text/plain")
-            latex_filter.append(f)
-
-            f = Gtk.FileFilter()
-            f.add_pattern("*")
-            f.set_name("All files")
-            latex_filter.append(f)
-
-            dialog.set_filters(latex_filter)
+            dialog.set_filters(LATEX_FILTER)
 
             try:
                 file = await dialog.save(self, None)
