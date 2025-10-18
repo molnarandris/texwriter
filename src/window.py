@@ -101,8 +101,8 @@ class TexwriterWindow(Adw.ApplicationWindow):
             toast.set_timeout(2)
             self.toast_overlay.add_toast(toast)
             return
-        filename = self._file.peek_path()
-        folder = self._file.get_parent().peek_path()
+        filename = self._file.get_path()
+        folder = self._file.get_dir()
 
         interpreter = 'latexmk'
         cmd = [interpreter, '-synctex=1', '-interaction=nonstopmode', '-pdf',

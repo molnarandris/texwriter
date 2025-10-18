@@ -91,3 +91,15 @@ class LatexFile(GObject.Object):
         if event != Gio.FileMonitorEvent.CHANGES_DONE_HINT:
             return
         self.emit("external-change")
+
+    def get_path(self):
+        if self.file is None:
+            return None
+        else:
+            return self.file.peek_path()
+
+    def get_dir(self):
+        if self.file is None:
+            return None
+        else:
+            return self.file.get_parent().peek_path()
