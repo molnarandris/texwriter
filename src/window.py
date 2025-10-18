@@ -26,7 +26,7 @@ from gi.repository import Gio
 from gi.repository import GLib
 from .utils import create_task, run_command_on_host
 from .pdfviewer import PdfViewer
-from .latexfile import LATEX_FILTER
+from .latexfile import LATEX_FILTER, LatexFileError, LatexFile
 import asyncio
 import re
 
@@ -62,31 +62,16 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.get_application().set_accels_for_action("win.save", ['<Ctrl>s'])
 
         self._monitor = None
-        self._file = None
+        self._file = LatexFile()
+        self._file.connect("external-change", self.on_file_external_change)
 
         buffer = self.source_view.get_buffer()
         self.command_tag = buffer.create_tag("command", foreground="#cf222e")
         buffer.connect("modified-changed", self.on_buffer_modified_changed)
         buffer.connect("changed", self.on_buffer_changed)
 
-    def get_file_info(self):
-        if self._file is None:
-            display_name = "New file"
-            directory = "unsaved"
-        else:
-            info = self._file.query_info("standard::display-name",
-                                         Gio.FileQueryInfoFlags.NONE)
-            if info:
-                display_name = info.get_attribute_string("standard::display-name")
-            else:
-                display_name = self._file.get_basename()
-
-            directory = self._file.get_parent().peek_path()
-
-        return directory, display_name
-
     def on_buffer_modified_changed(self, buffer):
-        directory, display_name = self.get_file_info()
+        directory, display_name = self._file.get_info()
         if buffer.get_modified():
             title = "• " + display_name
         else:
@@ -160,26 +145,13 @@ class TexwriterWindow(Adw.ApplicationWindow):
                     return
                 raise
 
-        success, contents, etag = await file.load_contents_async(None)
-        if not success:
-            toast = Adw.Toast.new(f"Error opening {file.peek_path()}")
-            toast.set_timeout(2)
-            self.toast_overlay.add_toast(toast)
-            return
-
         try:
-            text = contents.decode("utf-8")
-        except UnicodeError as err:
-            toast = Adw.Toast.new(f"The file {file.peek_path()} is not encoded in unicode")
+            text = await self._file.open_file(file)
+        except LatexFileError as e:
+            toast = Adw.Toast.new(str(e))
             toast.set_timeout(2)
             self.toast_overlay.add_toast(toast)
             return
-
-        if self._monitor is not None:
-            self._monitor.disconnect_by_func(self.file_monitor_cb)
-        self._monitor = file.monitor(Gio.FileMonitorFlags.NONE, None)
-        self._monitor.connect("changed", self.file_monitor_cb)
-        self._file = file
 
         buffer = self.source_view.get_buffer()
         buffer.set_text(text)
@@ -237,37 +209,21 @@ class TexwriterWindow(Adw.ApplicationWindow):
         end = buffer.get_end_iter()
         text = buffer.get_text(start, end, False)
 
-        _, display_name = self.get_file_info()
-
-        self._monitor.handler_block_by_func(self.file_monitor_cb)
         try:
-            file = open(self._file.peek_path(), "w")
-        except PermissionError:
-            toast = Adw.Toast.new("Cannot save to {display_name}: permission denied")
-            toast.set_timeout(2)
-            self.toast_overlay.add_toast(toast)
-
-        try:
-            file.write(text)
-        except (IOError, OSError):
-            toast = Adw.Toast.new("Cannot save to {display_name}: can't write file")
+            await self._file.save(text)
+        except LatexFileError as e:
+            toast = Adw.Toast.new(str(e))
             toast.set_timeout(2)
             self.toast_overlay.add_toast(toast)
         else:
             buffer.set_modified(False)
-        finally:
-            file.close()
-            await asyncio.sleep(0.05) #need to wait a bit before unblocking
-            self._monitor.handler_unblock_by_func(self.file_monitor_cb)
 
-    def file_monitor_cb(self, monitor, file, other_file, event):
-        if event != Gio.FileMonitorEvent.CHANGES_DONE_HINT:
-            return
+    def on_file_external_change(self, latexfile):
         self.banner.set_revealed(True)
 
     @Gtk.Template.Callback()
     def on_banner_button_clicked(self, user_data):
         self.banner.set_revealed(False)
-        create_task(self.open(self._file))
+        create_task(self.open(self._file.file))
 
 
