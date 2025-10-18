@@ -23,12 +23,10 @@ class LatexBuffer(GtkSource.Buffer):
             self.apply_tag(self.command_tag, start_it, end_it)
 
     def do_changed(self):
+        Gtk.TextBuffer.do_changed(self)
         insert = self.get_insert()
         start = self.get_iter_at_mark(insert)
         start.backward_line()
         end = self.get_iter_at_mark(insert)
         end.forward_line()
         self.highlight_commands(start, end)
-
-
-
