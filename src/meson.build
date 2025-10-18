@@ -44,6 +44,7 @@ texwriter_sources = [
   'utils.py',
   'pdfviewer.py',
   'latexfile.py',
+  'latexbuffer.py',
 ]
 
 install_data(texwriter_sources, install_dir: moduledir)
