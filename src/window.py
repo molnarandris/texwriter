@@ -102,6 +102,9 @@ class TexwriterWindow(Adw.ApplicationWindow):
         filename = self._file.get_path()
         folder = self._file.get_dir()
 
+        if filename is None:
+            return
+
         interpreter = 'latexmk'
         cmd = [interpreter, '-synctex=1', '-interaction=nonstopmode', '-pdf',
                "-g", "--output-directory=" + folder, filename]
@@ -164,7 +167,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
         create_task(self.save())
 
     async def save(self):
-        if self._file is None:
+        if self._file.get_path() is None:
             dialog = Gtk.FileDialog()
             dialog.set_filters(LATEX_FILTER)
 
