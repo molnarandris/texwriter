@@ -58,11 +58,6 @@ class LogViewer(Gtk.Widget):
         for w in warnings:
             row = Adw.ActionRow.new()
             row.set_title(w[0])
-            row.set_title(e)
-            self.listbox.append(row)
-        for w in warnings:
-            row = Adw.ActionRow.new()
-            row.set_title(w[0])
             self.listbox.append(row)
 
         self.stack.set_visible_child_name("content")
