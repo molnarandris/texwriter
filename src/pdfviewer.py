@@ -12,6 +12,7 @@ class PdfViewer(Gtk.Widget):
 
     stack = Gtk.Template.Child()
     box = Gtk.Template.Child()
+    scroll = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -21,10 +22,19 @@ class PdfViewer(Gtk.Widget):
         self._path = None
         self.zoom = 0.4 # zoom factor when not in zoom gesture
         self.zoom_delta = 1 # keep zoom level delta while zooming
+        self.mouse_x = 0 # keep the pointer coordinate
+        self.mouse_y = 0 # keep the pointer coordinate
+        self.vadj = 0 # keep hadj, vadj
+        self.hadj = 0
 
         controller = Gtk.GestureZoom.new()
         controller.connect("scale-changed", self.on_zoom)
+        controller.connect("begin", self.on_zoom_begin)
         controller.connect("end", self.on_zoom_end)
+        self.add_controller(controller)
+
+        controller = Gtk.EventControllerMotion.new()
+        controller.connect("motion", self.on_motion)
         self.add_controller(controller)
 
     def set_path(self,path):
@@ -53,14 +63,27 @@ class PdfViewer(Gtk.Widget):
             self.box.append(page)
 
     def on_zoom(self, zoom_gesture, scale):
-        self.zoom_delta = scale
         p = self.box.get_first_child()
         while p is not None:
             p.zoom(self.zoom*scale)
             p = p.get_next_sibling()
+        hadj = self.scroll.get_hadjustment()
+        vadj = self.scroll.get_vadjustment()
+        hadj.set_value(max(0,(self.hadj+self.mouse_x)*scale - self.mouse_x))
+        vadj.set_value(max(0,(self.vadj+self.mouse_y)*scale - self.mouse_y))
+        self.zoom_delta = scale
+
+    def on_zoom_begin(self, zoom_gesture, sequence):
+        self.hadj = self.scroll.get_hadjustment().get_value()
+        self.vadj = self.scroll.get_vadjustment().get_value()
+
 
     def on_zoom_end(self, zoom_gesture, sequence):
         self.zoom = self.zoom* self.zoom_delta
+
+    def on_motion(self, controller, x, y):
+        self.mouse_x = x
+        self.mouse_y = y
 
 class PdfPage(Gtk.Widget):
     __gtype_name__ = 'PdfPage'
