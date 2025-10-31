@@ -41,6 +41,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
     end_pane = Gtk.Template.Child() # holds the pdf viewer
     start_pane_title = Gtk.Template.Child()
     pdf_viewer = Gtk.Template.Child()
+    log_viewer = Gtk.Template.Child()
     source_view = Gtk.Template.Child()
     toast_overlay = Gtk.Template.Child()
     banner = Gtk.Template.Child()
@@ -111,17 +112,18 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
         success, log_text = await run_command_on_host(cmd)
 
+        await self.log_viewer.parse_latex_log()
+
         if not success:
             toast = Adw.Toast.new("Compilation failed")
             toast.set_timeout(2)
             self.toast_overlay.add_toast(toast)
-            print(log_text)
             self.pdf_viewer.show_empty()
+            self.pdf_log_stack.set_visible_child_name("log")
         else:
             toast = Adw.Toast.new("Compilation finished")
             toast.set_timeout(2)
             self.toast_overlay.add_toast(toast)
-            print(log_text)
             self.pdf_viewer.reload()
 
     async def open(self, file=None):
@@ -162,6 +164,8 @@ class TexwriterWindow(Adw.ApplicationWindow):
         path = file.peek_path()
         path = path[:-4] + ".pdf"
         self.pdf_viewer.set_path(path)
+        path = path[:-4] + ".log"
+        self.log_viewer.set_path(path)
 
     def on_save_action(self, action, param):
         create_task(self.save())
