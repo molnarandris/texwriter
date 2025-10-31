@@ -97,9 +97,25 @@ template $TexwriterWindow: Adw.ApplicationWindow {
             tooltip-text: _("Main Menu");
             menu-model: primary_menu;
           }
+          [end]
+          Button switch_log_button {
+            visible: true;
+            icon-name: "dialog-warning-symbolic";
+            clicked => $on_switch_log_button_clicked();
+            tooltip-text: _("Show log");
+          }
         }
 
-        content: $PdfViewer pdf_viewer {};
+        content: Stack pdf_log_stack{
+          StackPage {
+            name: "pdf";
+            child: $PdfViewer pdf_viewer {};
+          }
+          StackPage {
+            name: "log";
+            child: $LogViewer log_viewer {};
+          }
+        };
       };
     }
   };

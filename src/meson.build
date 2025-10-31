@@ -7,6 +7,7 @@ blueprints = custom_target('blueprints',
     'gtk/help-overlay.blp',
     'window.blp',
     'pdfviewer.blp',
+    'logviewer.blp',
   ),
   output: '.',
   command: [find_program('blueprint-compiler'), 'batch-compile', '@OUTPUT@', '@CURRENT_SOURCE_DIR@', '@INPUT@'],
@@ -45,6 +46,7 @@ texwriter_sources = [
   'pdfviewer.py',
   'latexfile.py',
   'latexbuffer.py',
+  'logviewer.py',
 ]
 
 install_data(texwriter_sources, install_dir: moduledir)

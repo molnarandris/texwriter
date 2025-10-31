@@ -26,6 +26,7 @@ from gi.repository import Gio
 from gi.repository import GLib
 from .utils import create_task, run_command_on_host
 from .pdfviewer import PdfViewer
+from .logviewer import LogViewer
 from .latexfile import LATEX_FILTER, LatexFileError, LatexFile
 from .latexbuffer import LatexBuffer
 import asyncio
@@ -43,6 +44,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
     source_view = Gtk.Template.Child()
     toast_overlay = Gtk.Template.Child()
     banner = Gtk.Template.Child()
+    pdf_log_stack = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -200,4 +202,9 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.banner.set_revealed(False)
         create_task(self.open(self._file.file))
 
-
+    @Gtk.Template.Callback()
+    def on_switch_log_button_clicked(self, user_data):
+        if self.pdf_log_stack.get_visible_child_name() == "pdf":
+            self.pdf_log_stack.set_visible_child_name("log")
+        else:
+            self.pdf_log_stack.set_visible_child_name("pdf")
