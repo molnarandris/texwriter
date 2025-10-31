@@ -19,6 +19,13 @@ class PdfViewer(Gtk.Widget):
         layout = Gtk.BinLayout()
         self.set_layout_manager(layout)
         self._path = None
+        self.zoom = 1 # zoom factor when not in zoom gesture
+        self.zoom_delta = 1 # keep zoom level delta while zooming
+
+        controller = Gtk.GestureZoom.new()
+        controller.connect("scale-changed", self.on_zoom)
+        controller.connect("end", self.on_zoom_end)
+        self.add_controller(controller)
 
     def set_path(self,path):
         self._path = path
@@ -45,6 +52,11 @@ class PdfViewer(Gtk.Widget):
             page = PdfPage(p)
             self.box.append(page)
 
+    def on_zoom(self, zoom_gesture, scale):
+        self.zoom_delta = scale
+
+    def on_zoom_end(self, zoom_gesture, sequence):
+        self.zoom = self.zoom* self.zoom_delta
 
 class PdfPage(Gtk.Widget):
     __gtype_name__ = 'PdfPage'
