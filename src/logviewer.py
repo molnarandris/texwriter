@@ -6,13 +6,8 @@ from .utils import create_task
 import re
 
 
-<<<<<<< HEAD
 ERROR_RE =  re.compile(r"! (.+?)\nl\.(\d+) (.+?)\n")
 WARNING_RE = re.compile(r"LaTeX Warning: (.*?)(?:on input line (\d+))?\.\n")
-=======
-ERROR_RE = re.compile(r"! (.+?)\n")
-WARNING_RE = re.compile(r"(LaTeX Warning: .+?(?: on input line \d+\.)?)")
->>>>>>> cd9bb6b (feat: initial log parsing)
 
 class LogFileError(Exception):
     pass
@@ -67,7 +62,7 @@ class LogViewer(Gtk.Widget):
             self.listbox.append(row)
         for w in warnings:
             row = Adw.ActionRow.new()
-            row.set_title(w)
+            row.set_title(w[0])
             self.listbox.append(row)
 
         self.stack.set_visible_child_name("content")
