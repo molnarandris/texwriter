@@ -3,6 +3,8 @@ from gi.repository import Adw
 from gi.repository import Gtk
 from gi.repository import Gio
 from gi.repository import Gdk
+from gi.repository import GLib
+from gi.repository import Graphene
 from gi.repository import GdkPixbuf
 import pymupdf
 
@@ -63,6 +65,40 @@ class PdfViewer(Gtk.Widget):
             overlay = Gtk.Overlay()
             overlay.set_child(page)
             self.box.append(overlay)
+
+    def get_page(self, n):
+        child = self.box.get_first_child()
+        for i in range(n):
+            child = child.get_next_sibling()
+        return child
+
+    def scroll_to(self, page_num, y):
+        overlay = self.get_page(page_num)
+        if overlay is None:
+            return
+        page = overlay.get_child()
+        point = Graphene.Point()
+        point.init(0, y)
+        _, p = page.compute_point(self.box, point)
+        vadj = self.scroll.get_vadjustment()
+        vadj.set_value(p.y - self.scroll.get_height()*0.3)
+
+    def synctex_fwd(self, rects):
+        for r in rects:
+            w,h,x,y,p = r
+            overlay = self.get_page(p)
+            if overlay is None:
+                return
+            page = overlay.get_child()
+            rect = SynctexRect(w,h,x,y, page.scale*200/72)
+            overlay.add_overlay(rect)
+
+        _, _, _, y, p = rects[0]
+        overlay = self.get_page(p)
+        if overlay is None:
+            return
+        page = overlay.get_child()
+        self.scroll_to(p, (y-h)*page.scale)
 
     def on_zoom(self, zoom_gesture, scale):
         p = self.box.get_first_child()

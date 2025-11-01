@@ -122,7 +122,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
             width = float(match[3])
             height = float(match[4])
             rectangles.append((width, height, x, y, page))
-        print(rectangles)
+        self.pdf_viewer.synctex_fwd(rectangles)
 
     async def compile(self):
         await self.save()
