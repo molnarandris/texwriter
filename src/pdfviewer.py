@@ -60,12 +60,14 @@ class PdfViewer(Gtk.Widget):
 
         for p in document.pages():
             page = PdfPage(p, self.zoom)
-            self.box.append(page)
+            overlay = Gtk.Overlay()
+            overlay.set_child(page)
+            self.box.append(overlay)
 
     def on_zoom(self, zoom_gesture, scale):
         p = self.box.get_first_child()
         while p is not None:
-            p.zoom(self.zoom*scale)
+            p.get_child().zoom(self.zoom*scale)
             p = p.get_next_sibling()
         hadj = self.scroll.get_hadjustment()
         vadj = self.scroll.get_vadjustment()
