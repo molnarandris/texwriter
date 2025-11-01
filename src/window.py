@@ -171,6 +171,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
             toast.set_timeout(2)
             self.toast_overlay.add_toast(toast)
             self.pdf_viewer.reload()
+            self.pdf_log_stack.set_visible_child_name("pdf")
             await self.synctex()
 
         self.running_compilation = None
