@@ -121,3 +121,26 @@ class PdfPage(Gtk.Widget):
             height = self.texture.get_intrinsic_height() * self.scale
             return (height, height, -1, -1)
 
+
+class SynctexRect(Gtk.Widget):
+    __gtype_name__ = 'SynctexRect'
+
+    def __init__(self, width, height, x, y, scale):
+        super().__init__()
+        height += 2
+        self.color = Gdk.RGBA()
+        self.color.parse("#FFF38060")
+        self.set_halign(Gtk.Align.START)
+        self.set_valign(Gtk.Align.START)
+        self.set_margin_top((y-height+1)*scale)
+        self.set_margin_start(x*scale)
+        GLib.timeout_add(700, self.do_destroy)
+        self.set_size_request(width*scale, height*scale)
+
+    def do_snapshot(self, snapshot):
+        rect = Graphene.Rect().init(0, 0, self.get_width(), self.get_height())
+        snapshot.append_color(self.color, rect)
+
+    def do_destroy(self):
+        self.unparent()
+        return False
