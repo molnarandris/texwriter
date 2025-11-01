@@ -60,20 +60,26 @@ class LogViewer(Gtk.Widget):
         warnings.extend(WARNING_RE.findall(log_text))
         for e in errors:
             row = Adw.ActionRow.new()
+            row.add_css_class("error")
             row.set_title(e[0] + " at line " + e[1])
             row.set_subtitle(e[2])
             self.listbox.append(row)
             if e[1]:
                 row.line_number = int(e[1])
                 row.set_activatable(True)
+                icon = Gtk.Image.new_from_icon_name("error-correct-symbolic")
+                row.add_suffix(icon)
             else:
                 row.set_activatable(False)
         for w in warnings:
             row = Adw.ActionRow.new()
+            row.add_css_class("warning")
             row.set_title(w[0])
             if w[1]:
                 row.line_number = int(w[1])
                 row.set_activatable(True)
+                icon = Gtk.Image.new_from_icon_name("error-correct-symbolic")
+                row.add_suffix(icon)
             else:
                 row.set_activatable(False)
             self.listbox.append(row)

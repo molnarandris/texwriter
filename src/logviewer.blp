@@ -16,7 +16,27 @@ template $LogViewer: Gtk.Widget {
       name: "content";
 
       child: ScrolledWindow {
-        ListBox listbox {
+        Adw.Clamp {
+          maximum-size: 500;
+          Box {
+            orientation: vertical;
+            valign: center;
+            margin-start: 10;
+            margin-end: 10;
+            Label {
+              label: _("Errors and warnings");
+              margin-top: 10;
+              margin-bottom: 10;
+              styles [
+                "title-1",
+              ]
+            }
+            ListBox listbox {
+              styles [
+                "boxed-list",
+              ]
+            }
+          }
         }
       };
     }
