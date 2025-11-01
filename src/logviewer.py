@@ -44,7 +44,7 @@ class LogViewer(Gtk.Widget):
             log_text = contents.decode("utf-8")
         except UnicodeError as err:
             self.stack.set_visible_child_name("empty")
-            raise LatexFileError(f"The file {file.peek_path()} is not encoded in unicode")
+            raise LogFileError(f"The file {file.peek_path()} is not encoded in unicode")
 
         errors = []
         warnings = []
