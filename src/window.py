@@ -150,6 +150,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
             toast.set_timeout(2)
             self.toast_overlay.add_toast(toast)
             self.pdf_viewer.reload()
+            await self.synctex()
 
     async def open(self, file=None):
 
