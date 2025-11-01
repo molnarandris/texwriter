@@ -45,6 +45,12 @@ class Editor(Gtk.Widget):
         buffer = self.source_view.get_buffer()
         buffer.set_modified(modified)
 
+    def get_cursor_position(self):
+        buffer = self.source_view.get_buffer()
+        it = buffer.get_iter_at_mark(buffer.get_insert())
+        line = it.get_line()
+        column = it.get_line_offset()
+        return line, column
 
     def on_buffer_modified_changed(self, buffer):
         self.emit("modified-changed", buffer.get_modified())

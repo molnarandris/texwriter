@@ -96,10 +96,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.start_pane.set_visible(True)
 
     async def synctex(self):
-        buffer = self.source_view.get_buffer()
-        it = buffer.get_iter_at_mark(buffer.get_insert())
-        line = it.get_line()
-        column = it.get_line_offset()
+        line, column = self.editor.get_cursor_position()
         tex_path = self._file.get_path()
         if tex_path is None:
             return
