@@ -1,5 +1,24 @@
 using Gtk 4.0;
 using Adw 1;
+using GtkSource 5;
 
-template $PdfViewer: Gtk.Widget {
+template $Editor: Gtk.Widget {
+  Box{
+    orientation: vertical;
+    Adw.Banner banner {
+      title: _("The file changed on the disk");
+      button-label: _("Reload");
+      button-clicked => $on_banner_button_clicked();
+
+      styles ["warning"]
+    }
+    ScrolledWindow {
+      vexpand: true;
+      GtkSource.View source_view {
+        monospace: true;
+        wrap-mode: word;
+        highlight-current-line: true;
+      }
+    }
+  }
 }

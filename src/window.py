@@ -29,11 +29,8 @@ from .pdfviewer import PdfViewer
 from .logviewer import LogViewer
 from .editor import Editor
 from .latexfile import LATEX_FILTER, LatexFileError, LatexFile
-from .latexbuffer import LatexBuffer
 import re
 import asyncio
-
-GtkSource.init()
 
 @Gtk.Template(resource_path='/com/github/molnarandris/texwriter/window.ui')
 class TexwriterWindow(Adw.ApplicationWindow):
@@ -44,10 +41,9 @@ class TexwriterWindow(Adw.ApplicationWindow):
     start_pane_title = Gtk.Template.Child()
     pdf_viewer = Gtk.Template.Child()
     log_viewer = Gtk.Template.Child()
-    source_view = Gtk.Template.Child()
     toast_overlay = Gtk.Template.Child()
-    banner = Gtk.Template.Child()
     pdf_log_stack = Gtk.Template.Child()
+    editor = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -76,15 +72,12 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self._file = LatexFile()
         self._file.connect("external-change", self.on_file_external_change)
 
-        buffer = LatexBuffer()
-        self.source_view.set_buffer(buffer)
-        buffer.connect("modified-changed", self.on_buffer_modified_changed)
+        self.editor.connect("modified-changed", self.on_editor_modified_changed)
 
-        editor = Editor()
 
-    def on_buffer_modified_changed(self, buffer):
+    def on_editor_modified_changed(self, editor, modified):
         directory, display_name = self._file.get_info()
-        if buffer.get_modified():
+        if modified:
             title = "• " + display_name
         else:
             title = display_name
@@ -188,13 +181,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
             self.toast_overlay.add_toast(toast)
             return
 
-        buffer = self.source_view.get_buffer()
-        buffer.set_text(text)
-        start, end = buffer.get_bounds()
-        buffer.highlight_commands(start, end)
-        start = buffer.get_start_iter()
-        buffer.place_cursor(start)
-        buffer.set_modified(False)
+        self.editor.set_text(text)
 
         path = file.peek_path()
         path = path[:-4] + ".pdf"
@@ -222,10 +209,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
                     return
                 raise
 
-        buffer = self.source_view.get_buffer()
-        start = buffer.get_start_iter()
-        end = buffer.get_end_iter()
-        text = buffer.get_text(start, end, False)
+        text = self.editor.get_text()
 
         try:
             await self._file.save(text)
@@ -234,15 +218,10 @@ class TexwriterWindow(Adw.ApplicationWindow):
             toast.set_timeout(2)
             self.toast_overlay.add_toast(toast)
         else:
-            buffer.set_modified(False)
+            self.editor.set_modified(False)
 
     def on_file_external_change(self, latexfile):
         self.banner.set_revealed(True)
-
-    @Gtk.Template.Callback()
-    def on_banner_button_clicked(self, user_data):
-        self.banner.set_revealed(False)
-        create_task(self.open(self._file.file))
 
     @Gtk.Template.Callback()
     def on_switch_log_button_clicked(self, user_data):

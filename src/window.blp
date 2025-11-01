@@ -1,6 +1,5 @@
 using Gtk 4.0;
 using Adw 1;
-using GtkSource 5;
 
 template $TexwriterWindow: Adw.ApplicationWindow {
   title: _("TeXWriter");
@@ -61,24 +60,7 @@ template $TexwriterWindow: Adw.ApplicationWindow {
           }
         }
 
-        content: Box{
-          orientation: vertical;
-          Adw.Banner banner {
-            title: _("The file changed on the disk");
-            button-label: _("Reload");
-            button-clicked => $on_banner_button_clicked();
-
-            styles ["warning"]
-          }
-          ScrolledWindow {
-            vexpand: true;
-            GtkSource.View source_view {
-              monospace: true;
-              wrap-mode: word;
-              highlight-current-line: true;
-            }
-          }
-        };
+        content: $Editor editor {};
       };
       end-child: Adw.ToolbarView end_pane {
         [top]
