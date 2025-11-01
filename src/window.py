@@ -29,6 +29,7 @@ from .pdfviewer import PdfViewer
 from .logviewer import LogViewer
 from .latexfile import LATEX_FILTER, LatexFileError, LatexFile
 from .latexbuffer import LatexBuffer
+import re
 import asyncio
 
 GtkSource.init()
@@ -99,7 +100,29 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.start_pane.set_visible(True)
 
     async def synctex(self):
-        print("synctex")
+        buffer = self.source_view.get_buffer()
+        it = buffer.get_iter_at_mark(buffer.get_insert())
+        line = it.get_line()
+        column = it.get_line_offset()
+        tex_path = self._file.get_path()
+        if tex_path is None:
+            return
+        pos = str(line) + ":" + str(column) + ":" + tex_path
+        pdf_path = tex_path[:-3] + "pdf"
+        cmd = ['synctex', 'view', '-i', pos, '-o', pdf_path]
+
+        success, output = await run_command_on_host(cmd)
+
+        record = "Page:(.*)\n.*\n.*\nh:(.*)\nv:(.*)\nW:(.*)\nH:(.*)"
+        rectangles = []
+        for match in re.findall(record, output):
+            page = int(match[0])-1
+            x = float(match[1])
+            y = float(match[2])
+            width = float(match[3])
+            height = float(match[4])
+            rectangles.append((width, height, x, y, page))
+        print(rectangles)
 
     async def compile(self):
         await self.save()
