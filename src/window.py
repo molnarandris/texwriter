@@ -75,6 +75,8 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
         self.editor.connect("modified-changed", self.on_editor_modified_changed)
 
+        self.log_viewer.connect("scroll-to", lambda _, l: self.editor.scroll_to(l))
+
         self.running_compilation = None
 
     def on_compile_action(self, action, param):

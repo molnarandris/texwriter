@@ -2,6 +2,7 @@ import gi
 from gi.repository import Adw
 from gi.repository import Gtk
 from gi.repository import Gio
+from gi.repository import GObject
 from .utils import create_task
 import re
 
@@ -16,6 +17,9 @@ class LogFileError(Exception):
 @Gtk.Template(resource_path='/com/github/molnarandris/texwriter/logviewer.ui')
 class LogViewer(Gtk.Widget):
     __gtype_name__ = 'LogViewer'
+    __gsignals__ = {
+        'scroll-to': (GObject.SIGNAL_RUN_FIRST, None, (int,)),
+    }
 
     stack = Gtk.Template.Child()
     listbox = Gtk.Template.Child()
@@ -25,6 +29,10 @@ class LogViewer(Gtk.Widget):
         layout = Gtk.BinLayout()
         self.set_layout_manager(layout)
         self.file = None
+        self.listbox.connect("row-activated", self.on_row_activated)
+
+    def on_row_activated(self, box, row):
+        self.emit("scroll-to", row.line_number)
 
     def set_path(self, path):
         self.file = Gio.File.new_for_path(path)
@@ -55,9 +63,19 @@ class LogViewer(Gtk.Widget):
             row.set_title(e[0] + " at line " + e[1])
             row.set_subtitle(e[2])
             self.listbox.append(row)
+            if e[1]:
+                row.line_number = int(e[1])
+                row.set_activatable(True)
+            else:
+                row.set_activatable(False)
         for w in warnings:
             row = Adw.ActionRow.new()
             row.set_title(w[0])
+            if w[1]:
+                row.line_number = int(w[1])
+                row.set_activatable(True)
+            else:
+                row.set_activatable(False)
             self.listbox.append(row)
 
         self.stack.set_visible_child_name("content")
