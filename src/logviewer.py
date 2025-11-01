@@ -8,6 +8,7 @@ import re
 
 
 ERROR_RE =  re.compile(r"! (.+?)\nl\.(\d+) (.+?)\n")
+ERROR_RE2 =  re.compile(r"! (.+?)\n.+?\n.+?\nl\.(\d+) (.*?)\n")
 WARNING_RE = re.compile(r"LaTeX Warning: (.*?)(?:on input line (\d+))?\.\n")
 
 class LogFileError(Exception):
@@ -57,6 +58,7 @@ class LogViewer(Gtk.Widget):
         errors = []
         warnings = []
         errors.extend(ERROR_RE.findall(log_text))
+        errors.extend(ERROR_RE2.findall(log_text))
         warnings.extend(WARNING_RE.findall(log_text))
         for e in errors:
             row = Adw.ActionRow.new()
