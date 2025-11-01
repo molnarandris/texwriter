@@ -6,11 +6,18 @@ from gi.repository import Gdk
 from gi.repository import GLib
 from gi.repository import Graphene
 from gi.repository import GdkPixbuf
+from gi.repository import GObject
 import pymupdf
+import re
+from .utils import create_task, run_command_on_host
+
 
 @Gtk.Template(resource_path='/com/github/molnarandris/texwriter/pdfviewer.ui')
 class PdfViewer(Gtk.Widget):
     __gtype_name__ = 'PdfViewer'
+    __gsignals__ = {
+        'synctex-back': (GObject.SIGNAL_RUN_FIRST, None, (int,)),
+    }
 
     stack = Gtk.Template.Child()
     box = Gtk.Template.Child()
@@ -62,6 +69,7 @@ class PdfViewer(Gtk.Widget):
 
         for p in document.pages():
             page = PdfPage(p, self.zoom)
+            page.connect("synctex-back", lambda p,x,y: create_task(self.synctex_back(p,x,y)))
             overlay = Gtk.Overlay()
             overlay.set_child(page)
             self.box.append(overlay)
@@ -123,14 +131,42 @@ class PdfViewer(Gtk.Widget):
         self.mouse_x = x
         self.mouse_y = y
 
+    async def synctex_back(self, page, x, y):
+        if self._path is None:
+            return
+        arg = str(page.number+1) + ":" + str(x) + ":" + str(y)
+        arg += ":" + self._path
+        cmd = ['synctex', 'edit', '-o', arg]
+        success, output = await run_command_on_host(cmd)
+        result = re.search("Line:(.*)", output)
+        line = int(result.group(1)) - 1
+        self.emit("synctex-back", line)
+
+
 class PdfPage(Gtk.Widget):
     __gtype_name__ = 'PdfPage'
+    __gsignals__ = {
+        'synctex-back': (GObject.SIGNAL_RUN_FIRST, None, (float, float)),
+    }
 
     def __init__(self, page, initial_scale):
         super().__init__()
         self.page = page
+        self.number = page.number
         self.scale = initial_scale
         self.render()
+        controller = Gtk.GestureClick()
+        controller.set_propagation_phase(Gtk.PropagationPhase.BUBBLE)
+        controller.connect("released", self.on_click)
+        self.add_controller(controller)
+
+    def on_click(self, controller, n_press, x, y):
+        if n_press != 2:
+            return
+        x = x/self.scale*72/200
+        y = y/self.scale*72/200
+
+        self.emit("synctex-back", x, y)
 
     def zoom(self,zoom):
         self.scale = zoom

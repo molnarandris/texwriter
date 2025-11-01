@@ -74,7 +74,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self._file.connect("external-change", self.on_file_external_change)
 
         self.editor.connect("modified-changed", self.on_editor_modified_changed)
-
+        self.pdf_viewer.connect("synctex-back", lambda _, l: self.editor.scroll_to(l))
         self.log_viewer.connect("scroll-to", lambda _, l: self.editor.scroll_to(l))
 
         self.running_compilation = None
