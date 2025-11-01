@@ -27,6 +27,7 @@ from gi.repository import GLib
 from .utils import create_task, run_command_on_host
 from .pdfviewer import PdfViewer
 from .logviewer import LogViewer
+from .editor import Editor
 from .latexfile import LATEX_FILTER, LatexFileError, LatexFile
 from .latexbuffer import LatexBuffer
 import re
@@ -78,6 +79,8 @@ class TexwriterWindow(Adw.ApplicationWindow):
         buffer = LatexBuffer()
         self.source_view.set_buffer(buffer)
         buffer.connect("modified-changed", self.on_buffer_modified_changed)
+
+        editor = Editor()
 
     def on_buffer_modified_changed(self, buffer):
         directory, display_name = self._file.get_info()
