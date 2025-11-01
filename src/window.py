@@ -44,6 +44,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
     toast_overlay = Gtk.Template.Child()
     pdf_log_stack = Gtk.Template.Child()
     editor = Gtk.Template.Child()
+    compile_button = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -54,7 +55,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.get_application().set_accels_for_action("win.synctex", ['F7'])
 
         action = Gio.SimpleAction(name="compile")
-        action.connect("activate", lambda *_ : create_task(self.compile()))
+        action.connect("activate", self.on_compile_action)
         self.add_action(action)
         self.get_application().set_accels_for_action("win.compile", ['F5'])
 
@@ -74,6 +75,16 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
         self.editor.connect("modified-changed", self.on_editor_modified_changed)
 
+        self.running_compilation = None
+
+    def on_compile_action(self, action, param):
+        if self.running_compilation is None:
+            self.running_compilation = create_task(self.compile())
+            self.compile_button.set_icon_name("media-playback-stop-symbolic")
+        else:
+            self.running_compilation.cancel()
+            self.running_compilation = None
+            self.compile_button.set_icon_name("media-playback-start-symbolic")
 
     def on_editor_modified_changed(self, editor, modified):
         directory, display_name = self._file.get_info()
@@ -115,7 +126,8 @@ class TexwriterWindow(Adw.ApplicationWindow):
             width = float(match[3])
             height = float(match[4])
             rectangles.append((width, height, x, y, page))
-        self.pdf_viewer.synctex_fwd(rectangles)
+        if rectangles:
+            self.pdf_viewer.synctex_fwd(rectangles)
 
     async def compile(self):
         await self.save()
@@ -135,7 +147,14 @@ class TexwriterWindow(Adw.ApplicationWindow):
         cmd = [interpreter, '-synctex=1', '-interaction=nonstopmode', '-pdf',
                "-g", "--output-directory=" + folder, filename]
 
-        success, log_text = await run_command_on_host(cmd)
+        try:
+            success, log_text = await run_command_on_host(cmd)
+        except asyncio.CancelledError:
+            toast = Adw.Toast.new("Compilation canceled")
+            toast.set_timeout(2)
+            self.toast_overlay.add_toast(toast)
+            return
+
 
         await self.log_viewer.parse_latex_log()
 
@@ -151,6 +170,9 @@ class TexwriterWindow(Adw.ApplicationWindow):
             self.toast_overlay.add_toast(toast)
             self.pdf_viewer.reload()
             await self.synctex()
+
+        self.running_compilation = None
+        self.compile_button.set_icon_name("media-playback-start-symbolic")
 
     async def open(self, file=None):
 
