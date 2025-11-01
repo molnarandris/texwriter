@@ -45,6 +45,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
     pdf_log_stack = Gtk.Template.Child()
     editor = Gtk.Template.Child()
     compile_button = Gtk.Template.Child()
+    pdf_log_switch = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -166,12 +167,14 @@ class TexwriterWindow(Adw.ApplicationWindow):
             self.toast_overlay.add_toast(toast)
             self.pdf_viewer.show_empty()
             self.pdf_log_stack.set_visible_child_name("log")
+            self.pdf_log_switch.set_icon_name("x-office-document-symbolic")
         else:
             toast = Adw.Toast.new("Compilation finished")
             toast.set_timeout(2)
             self.toast_overlay.add_toast(toast)
             self.pdf_viewer.reload()
             self.pdf_log_stack.set_visible_child_name("pdf")
+            self.pdf_log_switch.set_icon_name("dialog-warning-symbolic")
             await self.synctex()
 
         self.running_compilation = None
@@ -247,8 +250,10 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.banner.set_revealed(True)
 
     @Gtk.Template.Callback()
-    def on_switch_log_button_clicked(self, user_data):
+    def on_switch_log_button_clicked(self, button):
         if self.pdf_log_stack.get_visible_child_name() == "pdf":
             self.pdf_log_stack.set_visible_child_name("log")
+            button.set_icon_name("x-office-document-symbolic")
         else:
             self.pdf_log_stack.set_visible_child_name("pdf")
+            button.set_icon_name("dialog-warning-symbolic")
