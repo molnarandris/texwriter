@@ -49,6 +49,12 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        action = Gio.SimpleAction(name="synctex")
+        action.connect("activate", lambda *_ : create_task(self.synctex()))
+        self.add_action(action)
+        self.get_application().set_accels_for_action("win.synctex", ['F7'])
+
         action = Gio.SimpleAction(name="compile")
         action.connect("activate", lambda *_ : create_task(self.compile()))
         self.add_action(action)
@@ -91,6 +97,9 @@ class TexwriterWindow(Adw.ApplicationWindow):
     def on_show_editor_button_clicked(self, button):
         self.end_pane.set_visible(False)
         self.start_pane.set_visible(True)
+
+    async def synctex(self):
+        print("synctex")
 
     async def compile(self):
         await self.save()
