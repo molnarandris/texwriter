@@ -3,6 +3,7 @@ from gi.repository import Gtk
 from gi.repository import GObject
 from gi.repository import GtkSource
 from .latexbuffer import LatexBuffer
+from gi.repository import Gio
 
 
 GtkSource.init()
@@ -25,6 +26,22 @@ class Editor(Gtk.Widget):
         buffer = LatexBuffer()
         self.source_view.set_buffer(buffer)
         buffer.connect("modified-changed", self.on_buffer_modified_changed)
+
+        self.add_completion("/app/share/completion/latex-mathsymbols.cwl")
+        self.add_completion("/app/share/completion/latex-document.cwl")
+        completion = self.source_view.get_completion()
+        completion.set_property("select-on-show", True)
+
+    def add_completion(self, path):
+        file = Gio.File.new_for_path(path)
+        contents = file.load_contents()
+        keywords = contents[1].decode('utf-8')
+        keybuff = GtkSource.Buffer()
+        keybuff.set_text(keywords)
+        provider = GtkSource.CompletionWords.new('latex-math')
+        provider.register(keybuff)
+        completion = self.source_view.get_completion()
+        completion.add_provider(provider)
 
     def set_text(self, text):
         buffer = self.source_view.get_buffer()

@@ -44,3 +44,4 @@ configure_file(
 )
 
 subdir('icons')
+install_subdir('completion', install_dir: get_option('datadir'))
