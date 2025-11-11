@@ -80,6 +80,11 @@ class TexwriterWindow(Adw.ApplicationWindow):
 
         self.running_compilation = None
 
+    def toast(self, message):
+        toast = Adw.Toast.new(message)
+        toast.set_timeout(2)
+        self.toast_overlay.add_toast(toast)
+
     def on_compile_action(self, action, param):
         if self.running_compilation is None:
             self.running_compilation = create_task(self.compile())
@@ -136,10 +141,9 @@ class TexwriterWindow(Adw.ApplicationWindow):
         await self.save()
 
         if self._file is None:
-            toast = Adw.Toast.new("Compilation failed: file saving dismissed by user")
-            toast.set_timeout(2)
-            self.toast_overlay.add_toast(toast)
+            self.toast("Compilation failed: file saving dismissed by user")
             return
+
         filename = self._file.get_path()
         folder = self._file.get_dir()
 
@@ -153,25 +157,19 @@ class TexwriterWindow(Adw.ApplicationWindow):
         try:
             success, log_text = await run_command_on_host(cmd)
         except asyncio.CancelledError:
-            toast = Adw.Toast.new("Compilation canceled")
-            toast.set_timeout(2)
-            self.toast_overlay.add_toast(toast)
+            self.toast("Compilation canceled")
             return
 
 
         await self.log_viewer.parse_latex_log()
 
         if not success:
-            toast = Adw.Toast.new("Compilation failed")
-            toast.set_timeout(2)
-            self.toast_overlay.add_toast(toast)
+            self.toast("Compilation failed")
             self.pdf_viewer.show_empty()
             self.pdf_log_stack.set_visible_child_name("log")
             self.pdf_log_switch.set_icon_name("x-office-document-symbolic")
         else:
-            toast = Adw.Toast.new("Compilation finished")
-            toast.set_timeout(2)
-            self.toast_overlay.add_toast(toast)
+            self.toast("Compilation finished")
             self.pdf_viewer.reload()
             self.pdf_log_stack.set_visible_child_name("pdf")
             self.pdf_log_switch.set_icon_name("dialog-warning-symbolic")
@@ -193,18 +191,14 @@ class TexwriterWindow(Adw.ApplicationWindow):
                 if err.matches(Gtk.dialog_error_quark(), Gtk.DialogError.DISMISSED):
                     return
                 if err.matches(Gtk.dialog_error_quark(), Gtk.DialogError.FAILED):
-                    toast = Adw.Toast.new("Could not select file")
-                    toast.set_timeout(2)
-                    self.toast_overlay.add_toast(toast)
+                    self.toast("Could not select file")
                     return
                 raise
 
         try:
             text = await self._file.open_file(file)
         except LatexFileError as e:
-            toast = Adw.Toast.new(str(e))
-            toast.set_timeout(2)
-            self.toast_overlay.add_toast(toast)
+            self.toast(str(e))
             return
 
         self.editor.set_text(text)
@@ -229,9 +223,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
                 if err.matches(Gtk.dialog_error_quark(), Gtk.DialogError.DISMISSED):
                     return
                 if err.matches(Gtk.dialog_error_quark(), Gtk.DialogError.FAILED):
-                    toast = Adw.Toast.new("Cannot save to file")
-                    toast.set_timeout(2)
-                    self.toast_overlay.add_toast(toast)
+                    self.toast("Cannot save to file")
                     return
                 raise
 
@@ -240,9 +232,7 @@ class TexwriterWindow(Adw.ApplicationWindow):
         try:
             await self._file.save(text)
         except LatexFileError as e:
-            toast = Adw.Toast.new(str(e))
-            toast.set_timeout(2)
-            self.toast_overlay.add_toast(toast)
+            self.toast(str(e))
         else:
             self.editor.set_modified(False)
 
