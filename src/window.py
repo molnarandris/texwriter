@@ -70,7 +70,6 @@ class TexwriterWindow(Adw.ApplicationWindow):
         self.add_action(action)
         self.get_application().set_accels_for_action("win.save", ['<Ctrl>s'])
 
-        self._monitor = None
         self._file = LatexFile()
         self._file.connect("external-change", self.on_file_external_change)
 
