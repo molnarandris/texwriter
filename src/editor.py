@@ -6,8 +6,6 @@ from .latexbuffer import LatexBuffer
 from gi.repository import Gio
 
 
-GtkSource.init()
-
 @Gtk.Template(resource_path='/com/github/molnarandris/texwriter/editor.ui')
 class Editor(Gtk.Widget):
     __gtype_name__ = 'Editor'

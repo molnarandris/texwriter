@@ -23,7 +23,9 @@ import asyncio
 
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
+gi.require_version('GtkSource', '5')
 
+from gi.repository import GtkSource
 from gi.repository import Gtk, Gio, Adw
 from .window import TexwriterWindow
 from gi.events import GLibEventLoopPolicy
@@ -87,5 +89,6 @@ class TexwriterApplication(Adw.Application):
 def main(version):
     """The application's entry point."""
     asyncio.set_event_loop_policy(GLibEventLoopPolicy())
+    GtkSource.init()
     app = TexwriterApplication()
     return app.run(sys.argv)
