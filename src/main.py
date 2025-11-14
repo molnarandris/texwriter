@@ -27,6 +27,7 @@ gi.require_version('Adw', '1')
 from gi.repository import Gtk, Gio, Adw
 from .window import TexwriterWindow
 from gi.events import GLibEventLoopPolicy
+from .preferences import PreferencesWindow
 
 class TexwriterApplication(Adw.Application):
     """The main application singleton class."""
@@ -64,7 +65,8 @@ class TexwriterApplication(Adw.Application):
 
     def on_preferences_action(self, widget, _):
         """Callback for the app.preferences action."""
-        print('app.preferences action activated')
+        preferences = PreferencesWindow()
+        preferences.present(self.props.active_window)
 
     def create_action(self, name, callback, shortcuts=None):
         """Add an application action.

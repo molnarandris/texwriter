@@ -1,0 +1,25 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $PreferencesWindow: Adw.PreferencesDialog {
+  content-width: 570;
+  content-height: 570;
+
+  Adw.PreferencesPage {
+    title: _("General");
+    icon-name: "icon-settings-symbolic";
+    Adw.PreferencesGroup {
+      Adw.ActionRow {
+
+        title: _("First Preference");
+        subtitle: _("This does not do anything");
+        icon-name: "icon-settings-symbolic";
+        activatable-widget: first_pref;
+
+        Switch first_pref {
+          valign: center;
+        }
+      }
+    }
+  }
+}

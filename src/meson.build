@@ -9,6 +9,7 @@ blueprints = custom_target('blueprints',
     'pdfviewer.blp',
     'logviewer.blp',
     'editor.blp',
+    'preferences.blp',
   ),
   output: '.',
   command: [find_program('blueprint-compiler'), 'batch-compile', '@OUTPUT@', '@CURRENT_SOURCE_DIR@', '@INPUT@'],
@@ -49,6 +50,7 @@ texwriter_sources = [
   'latexbuffer.py',
   'logviewer.py',
   'editor.py',
+  'preferences.py',
 ]
 
 install_data(texwriter_sources, install_dir: moduledir)
