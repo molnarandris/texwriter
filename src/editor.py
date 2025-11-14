@@ -47,7 +47,7 @@ class Editor(Gtk.Widget):
         buffer = self.source_view.get_buffer()
         buffer.set_text(text)
         start, end = buffer.get_bounds()
-        buffer.highlight_commands(start, end)
+        #buffer.highlight_commands(start, end)
         start = buffer.get_start_iter()
         buffer.place_cursor(start)
         buffer.set_modified(False)
