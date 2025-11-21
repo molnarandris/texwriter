@@ -1,7 +1,3 @@
-# latex mode: LaTeX commands (document level)
-# dani/2006-02-18
-# tbraun/2006-08-03 removed dup inserted by me ...
-# tbraun/2007-02-24 added left/right variants
 \abstractname{name}
 \addcontentsline{file}{secunit}{entry}
 \Alph{counter}
