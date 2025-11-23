@@ -12,6 +12,12 @@ LaTeX editor for the Gnome desktop.
 > 
 > Also my pdf viewer has a memory leak somewhere...
 
+## Installation
+
+Don't try it. Really. 
+
+If you want to try it despite the warnings, clone it and compile it with Gnome Builder. I think you need to install it for the file picker/compiler to work correctly (and for the app icon to show up). For that, click on "Export" in builder (in the drop-down menu next to the hammer icon), and then click on the flatpak package once the file viewer pops up. 
+
 ## Features
 
 - Document editing
